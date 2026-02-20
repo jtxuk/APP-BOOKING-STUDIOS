@@ -15,20 +15,13 @@ React Native + Expo application for studio booking system.
 npm install
 ```
 
-2. Create a `.env` file based on `.env.example`:
-```bash
-cp .env.example .env
-```
+2. API URL configuration:
 
-3. Update `.env` with your backend URL:
-```
-API_URL=http://localhost:5000/api
-```
+The app picks the API URL automatically:
+- Production web on `reservas.millenia.es` → `http://reservas.millenia.es/api`
+- Local development → `http://localhost:5000/api`
 
-Note: For iOS device testing, use your machine's IP address instead of localhost:
-```
-API_URL=http://192.168.x.x:5000/api
-```
+If you need another host/IP for devices, update `API_URL` in `frontend/services/api.js`.
 
 ## Running the App
 
@@ -76,7 +69,7 @@ frontend/
 ## Features
 
 - **Login**: Restricted access with JWT authentication
-- **Studios**: Browse 6 available recording studios
+- **Studios**: Browse 8 available recording studios
 - **Booking**: Select dates and time slots (4 slots of 3 hours each)
 - **Calendar**: Interactive calendar for date selection
 - **My Bookings**: View and cancel reservations
@@ -92,6 +85,7 @@ frontend/
 
 ## Notes
 
-- Backend must be running on `http://localhost:5000`
+- Backend must be running on `http://localhost:5000` for local development
+- Production web uses Apache + PHP proxy at `/api`
 - User registration is done in the backend only
 - No payments processing in this version

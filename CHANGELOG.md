@@ -1,5 +1,22 @@
 # Changelog - Booking App
 
+## [Actualización 20 Febrero 2026]
+
+### 🚀 Producción Web (reservas.millenia.es)
+
+- **Proxy PHP en `/api`** para exponer el backend detrás de Apache
+- **Reenvío de `Authorization`** (SetEnvIfNoCase + fallback en PHP)
+- **Soporte de preflight `OPTIONS`** en el proxy
+- **SPA routing** con `.htaccess` en la raíz
+
+### 🔧 Ajustes de Backend/Frontend
+
+- **CORS restringido** a `reservas.millenia.es` y localhost
+- **Servidor escuchando en `0.0.0.0`** para ejecución en VPS
+- **API URL** basada en hostname (producción vs desarrollo)
+- **Logout en web** usando confirmación nativa (`window.confirm`)
+- **Timeout del cliente** ampliado y mejor logging de respuestas
+
 ## [Actualización 19 Febrero 2026]
 
 ### 🎨 Mejoras de Interfaz

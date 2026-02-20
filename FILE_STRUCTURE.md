@@ -14,6 +14,11 @@ booking-app/
 ├── 📄 FILE_STRUCTURE.md                  [Este archivo]
 │
 │
+├─── 📁 api/                              [Proxy PHP para /api en producción]
+│    ├── 📄 index.php                     [Proxy HTTP hacia backend]
+│    └── 📄 .htaccess                     [Reescritura + Authorization]
+│
+│
 ├─── 📁 backend/                          [Servidor Node.js + Express]
 │    │
 │    ├── 📄 README.md                     [Documentación del backend]
@@ -88,6 +93,7 @@ booking-app/
 
 TOTAL DE ARCHIVOS:
 ├─ Documentación: 9 archivos
+├─ API Proxy: 2 archivos
 ├─ Backend: 22 archivos
 │  ├─ Raíz: 10 archivos
 │  ├─ config/: 1 archivo
@@ -99,7 +105,7 @@ TOTAL DE ARCHIVOS:
    ├─ services/: 1 archivo
    └─ screens/: 6 archivos
 
-TOTAL: 46+ archivos
+TOTAL: 48+ archivos
 ```
 
 ---
@@ -161,7 +167,7 @@ TOTAL: 46+ archivos
 | Archivo | Componente | Funcionalidad |
 |---------|-----------|---------------|
 | LoginScreen.js | Login | Email + Password |
-| StudioListScreen.js | Lista | 6 Estudios |
+| StudioListScreen.js | Lista | 8 Estudios |
 | CalendarScreen.js | Calendario | Fecha + 4 slots |
 | MyBookingsScreen.js | Mis Reservas | Ver y cancelar |
 | ProfileScreen.js | Perfil | Info + Logout |

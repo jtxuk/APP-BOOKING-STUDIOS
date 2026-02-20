@@ -2,33 +2,18 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import storage from '../utils/storage';
 
-// Detectar automáticamente la IP del host de desarrollo
-const getApiUrl = () => {
-  // Si hay una variable de entorno de producción, usarla
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-  
-  // En desarrollo con Expo, obtener la IP del debugger host
-  const debuggerHost = Constants.expoConfig?.hostUri;
-  
-  if (debuggerHost) {
-    // Extraer solo la IP (sin el puerto del metro bundler)
-    const host = debuggerHost.split(':')[0];
-    return `http://${host}:5000/api`;
-  }
-  
-  // Fallback a localhost (útil para emuladores)
-  return 'http://localhost:5000/api';
-};
-
-const API_URL = getApiUrl();
+// En producción usa /api (ruta local a través de Apache)
+// En desarrollo usa localhost:5000
+const API_URL = typeof window !== 'undefined' && window.location.hostname === 'reservas.millenia.es'
+  ? 'http://reservas.millenia.es/api'
+  : 'http://localhost:5000/api';
 
 console.log('📡 API URL configurada:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 30000,
+  withCredentials: true,
 });
 
 // Add token to requests
@@ -46,6 +31,25 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor for better error logging
+api.interceptors.response.use(
+  (response) => {
+    console.log('✅ Respuesta exitosa:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('❌ Error en respuesta:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code,
+      url: error.config?.url
+    });
+    return Promise.reject(error);
+  }
 );
 
 export const authAPI = {

@@ -78,26 +78,13 @@ cd frontend
 npm install
 ```
 
-### Paso 2: Configurar variables de entorno
-```bash
-cp .env.example .env
-```
+### Paso 2: Configurar API
+La app decide la URL del API automáticamente:
 
-**Importante**: La app detecta automáticamente la IP usando `expo-constants`, pero puedes configurar manualmente en `.env` si lo necesitas:
+- **Producción (web en reservas.millenia.es)** → `http://reservas.millenia.es/api`
+- **Desarrollo local** → `http://localhost:5000/api`
 
-**Para desarrollo local (web/emulador en la misma máquina):**
-```env
-API_URL=http://localhost:5000/api
-```
-
-**Para dispositivo físico o emulador Android/iOS:**
-```env
-API_URL=http://192.168.X.X:5000/api
-```
-(Reemplaza `192.168.X.X` con tu IP local)
-
-**Detección automática** (recomendado):
-No configures `API_URL` y la app usará `Constants.expoConfig.hostUri` automáticamente.
+Si necesitas apuntar a otra IP/host en desarrollo (móvil o emulador), ajusta `API_URL` en `frontend/services/api.js`.
 
 ---
 

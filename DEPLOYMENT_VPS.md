@@ -20,7 +20,7 @@ ssh root@tu-vps.dinahosting.com
 ### 1.2 Crear directorio para la app
 ```bash
 mkdir -p /home/millenia/www/app-reservas/backend
-mkdir -p /home/millenia/www/app-reservas/frontend
+mkdir -p /home/millenia/www/app-reservas/api
 ```
 
 ### 1.3 Desde tu Mac, sube el backend
@@ -60,49 +60,137 @@ pm2 save
 
 ---
 
-## 🌐 Paso 2: Configurar Nginx
+## 🌐 Paso 2: Configurar Apache + Proxy PHP
 
-### 2.1 Crear configuración de Nginx para el subdominio
+En este VPS el puerto 5000 no es accesible externamente. Por eso el API se expone vía un proxy PHP en `/api`.
 
-**IMPORTANTE**: Esta configuración NO afectará tu sitio web actual.
+### 2.1 Proxy PHP en /api
 
 ```bash
-# Crear archivo de configuración SEPARADO para la app de reservas
-cat > /etc/nginx/sites-available/app-reservas << 'EOF'
-server {
-    listen 80;
-    server_name reservas.millenia.es;
-    
-    # Frontend - Servir archivos estáticos
-    location / {
-        root /home/millenia/www/app-reservas/frontend;
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache, must-revalidate";
-    }
-    
-    # Backend - Proxy reverso
-    location /api {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+cat > /home/millenia/www/app-reservas/api/index.php << 'PHP'
+<?php
+$target = "http://127.0.0.1:5000" . $_SERVER["REQUEST_URI"];
+$method = $_SERVER["REQUEST_METHOD"];
+
+if ($method === 'OPTIONS') {
+    http_response_code(204);
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    exit;
+}
+
+$headers = [];
+$incomingHeaders = function_exists('getallheaders') ? getallheaders() : [];
+foreach ($incomingHeaders as $k => $v) {
+    if (!in_array(strtolower($k), ["host", "connection"])) {
+        $headers[] = $k . ": " . $v;
     }
 }
-EOF
+if (!array_key_exists('Authorization', $incomingHeaders)) {
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+    if ($auth) {
+        $headers[] = "Authorization: " . $auth;
+    }
+}
+
+$body = null;
+if ($method !== "GET" && $method !== "HEAD") {
+    $body = file_get_contents("php://input");
+}
+
+if (function_exists("curl_init")) {
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $target,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 30
+    ]);
+    if ($body !== null) {
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+    }
+    $response = curl_exec($curl);
+    $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+    if ($response === false) {
+        http_response_code(502);
+        echo json_encode(["error" => "Backend unavailable: " . curl_error($curl)]);
+        curl_close($curl);
+        exit;
+    }
+    curl_close($curl);
+} else {
+    $opts = [
+        "http" => [
+            "method" => $method,
+            "header" => implode("\r\n", $headers),
+            "timeout" => 30
+        ]
+    ];
+    if ($body !== null) {
+        $opts["http"]["content"] = $body;
+    }
+    $response = @file_get_contents($target, false, stream_context_create($opts));
+    if ($response === false) {
+        http_response_code(502);
+        echo json_encode(["error" => "Backend unavailable"]);
+        exit;
+    }
+    $http_code = 200;
+    $content_type = "application/json";
+}
+
+http_response_code($http_code);
+header("Content-Type: " . ($content_type ?: "application/json"));
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+echo $response;
+?>
+PHP
 ```
 
-**Nota**: Tu sitio web actual seguirá funcionando en `tudominio.com` sin cambios.
+### 2.2 .htaccess de /api
 
-### 2.2 Activar el sitio
 ```bash
-ln -s /etc/nginx/sites-available/app-reservas /etc/nginx/sites-enabled/
-nginx -t
-systemctl reload nginx
+cat > /home/millenia/www/app-reservas/api/.htaccess << 'HT'
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  <IfModule mod_setenvif.c>
+    SetEnvIfNoCase Authorization "(.+)" HTTP_AUTHORIZATION=$1
+  </IfModule>
+
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
+HT
+```
+
+### 2.3 .htaccess raíz (SPA)
+
+```bash
+cat > /home/millenia/www/app-reservas/.htaccess << 'HT'
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  RewriteCond %{REQUEST_URI} !^/api/
+  RewriteRule ^ index.html [L]
+</IfModule>
+HT
 ```
 
 ---
@@ -113,23 +201,18 @@ systemctl reload nginx
 ```bash
 cd "/Users/oficina2/APP BOOKING WRKSPC/frontend"
 
-# Crear archivo .env para producción (usa el subdominio)
-cat > .env << EOF
-REACT_APP_API_URL=https://reservas.millenia.es/api
-EOF
-
 # Compilar
 npx expo export -p web
 ```
 
 ### 3.2 Subir al servidor
 ```bash
-scp -r dist/* root@tu-vps.dinahosting.com:/home/millenia/www/app-reservas/frontend/
+rsync -qr --delete "dist/" "millenia@tu-vps.dinahosting.com:/home/millenia/www/app-reservas/"
 ```
 
 ---
 
-## 🔒 Paso 4: Configurar SSL (HTTPS) - OPCIONAL pero RECOMENDADO
+## 🔒 Paso 4: Configurar SSL (HTTPS) - OPCIONAL
 
 ```bash
 # En el servidor - Solo para el subdominio reservas
@@ -144,7 +227,7 @@ certbot --nginx -d reservas.millenia.es
 
 ## ✅ Verificación
 
-1. **Backend**: Visita `http://reservas.millenia.es/api/studios`
+1. **Backend**: Visita `http://reservas.millenia.es/api/health`
 2. **Frontend**: Visita `http://reservas.millenia.es`
 3. **Login**: Prueba con juan@example.com / 123456
 4. **Tu sitio actual**: Verifica que `http://millenia.es` sigue funcionando normalmente
@@ -184,9 +267,9 @@ pm2 logs app-reservas
 pm2 restart app-reservas
 ```
 
-### Ver logs de Nginx:
+### Ver logs de Apache:
 ```bash
-tail -f /var/log/nginx/error.log
+tail -f /var/log/apache2/error.log
 ```
 
 ### Verificar que el backend está corriendo:

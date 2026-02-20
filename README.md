@@ -1,11 +1,14 @@
 # Booking App - Sistema de Reservas para Estudios de Grabación
 
-Aplicación completa para iOS y Android que permite a usuarios registrados reservar slots de 3 horas en 8 estudios de grabación diferentes.
+Aplicación completa (iOS, Android y Web) para reservar slots de 3 horas en 8 estudios de grabación. En producción se sirve como SPA en Apache y el API se expone vía proxy PHP en `/api`.
 
 ## Estructura del Proyecto
 
 ```
 booking-app/
+├── api/               # Proxy PHP para /api (producción)
+│   ├── index.php
+│   └── .htaccess
 ├── backend/           # Node.js + Express API
 │   ├── server.js      # Entry point
 │   ├── package.json   # Dependencies
@@ -84,10 +87,9 @@ npm install
 cp .env.example .env
 ```
 
-Editar `.env`:
-```
-API_URL=http://localhost:5000/api
-```
+El frontend detecta automáticamente el entorno:
+- Producción en `reservas.millenia.es` → usa `http://reservas.millenia.es/api`
+- Desarrollo → usa `http://localhost:5000/api`
 
 Iniciar la app:
 ```bash
@@ -129,7 +131,7 @@ npm run web    # Web
 ## Pantallas de la App
 
 1. **Login**: Acceso restringido con email y contraseña
-2. **Estudios**: Lista de 6 estudios disponibles
+2. **Estudios**: Lista de 8 estudios disponibles
 3. **Calendario**: Calendario en español con selección de fecha y horarios
 4. **Mis Reservas**: Visualización y cancelación de reservas
 5. **Perfil**: Información del usuario, cambio de contraseña y cierre de sesión
@@ -156,7 +158,8 @@ npm run web    # Web
 ## Notas Técnicas
 
 - **Backend**: Express.js con PostgreSQL
-- **Frontend**: React Native con Expo para iOS/Android
+- **Frontend**: React Native con Expo para iOS/Android/Web
+- **Producción Web**: Apache sirve SPA en `/home/millenia/www/app-reservas` y proxy PHP en `/api`
 - **Auth**: JWT (tokens de 24 horas)
 - **BD**: PostgreSQL con relaciones entre usuarios, estudios, slots y reservas
 

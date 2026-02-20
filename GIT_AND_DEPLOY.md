@@ -83,6 +83,18 @@ git push origin main
 
 ## Deploy del Backend
 
+### Opción 0: VPS Dinahosting (Apache + PHP proxy)
+
+```bash
+# Subir backend
+rsync -qr --delete backend/ millenia@82.98.145.67:/home/millenia/www/app-reservas/backend/
+
+# Instalar dependencias y reiniciar
+ssh millenia@82.98.145.67 "cd /home/millenia/www/app-reservas/backend && npm install --production && pm2 restart app-reservas"
+```
+
+**Nota**: El API público se expone vía `/api` usando el proxy PHP en `/home/millenia/www/app-reservas/api`.
+
 ### Opción 1: Heroku (Gratis/Pagado)
 
 ```bash

@@ -49,7 +49,7 @@ Production mode:
 npm start
 ```
 
-The server will start on `http://localhost:5000`
+The server will start on `http://localhost:5000` (dev). In production it runs on `0.0.0.0:5000` and is exposed via the Apache `/api` proxy.
 
 ## API Endpoints
 

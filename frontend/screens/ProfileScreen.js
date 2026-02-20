@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { userAPI } from '../services/api';
 import Colors from '../constants/Colors';
@@ -41,6 +42,24 @@ export default function ProfileScreen({ setUserToken, navigation }) {
   };
 
   const handleLogout = async () => {
+    const doLogout = async () => {
+      try {
+        await storage.removeItem('userToken');
+        await storage.removeItem('user');
+        setUserToken(null);
+      } catch (error) {
+        console.log('Error logging out:', error);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('¿Estás seguro de que deseas cerrar sesión?');
+      if (confirmed) {
+        await doLogout();
+      }
+      return;
+    }
+
     Alert.alert(
       'Cerrar sesión',
       '¿Estás seguro de que deseas cerrar sesión?',
@@ -48,15 +67,7 @@ export default function ProfileScreen({ setUserToken, navigation }) {
         { text: 'Cancelar', onPress: () => {} },
         {
           text: 'Sí, cerrar sesión',
-          onPress: async () => {
-            try {
-              await storage.removeItem('userToken');
-              await storage.removeItem('user');
-              setUserToken(null);
-            } catch (error) {
-              console.log('Error logging out:', error);
-            }
-          },
+          onPress: doLogout,
         },
       ]
     );
