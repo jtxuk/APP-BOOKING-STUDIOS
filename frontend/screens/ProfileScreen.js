@@ -9,10 +9,10 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { userAPI } from '../services/api';
 import Colors from '../constants/Colors';
 import { GlobalStyles } from '../constants/GlobalStyles';
+import storage from '../utils/storage';
 
 export default function ProfileScreen({ setUserToken, navigation }) {
   const [user, setUser] = useState(null);
@@ -50,8 +50,8 @@ export default function ProfileScreen({ setUserToken, navigation }) {
           text: 'Sí, cerrar sesión',
           onPress: async () => {
             try {
-              await SecureStore.deleteItemAsync('userToken');
-              await SecureStore.deleteItemAsync('user');
+              await storage.removeItem('userToken');
+              await storage.removeItem('user');
               setUserToken(null);
             } catch (error) {
               console.log('Error logging out:', error);
@@ -216,6 +216,9 @@ const styles = StyleSheet.create({
   container: {
     ...GlobalStyles.container,
     padding: 20,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 600,
   },
   centerContainer: GlobalStyles.centerContainer,
   profileCard: {

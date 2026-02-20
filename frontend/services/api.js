@@ -1,9 +1,14 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import storage from '../utils/storage';
 
 // Detectar automáticamente la IP del host de desarrollo
 const getApiUrl = () => {
+  // Si hay una variable de entorno de producción, usarla
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
   // En desarrollo con Expo, obtener la IP del debugger host
   const debuggerHost = Constants.expoConfig?.hostUri;
   
@@ -29,7 +34,7 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync('userToken');
+    const token = await storage.getItem('userToken');
     console.log('🔑 Token recuperado:', token ? 'Sí (length: ' + token.length + ')' : 'No');
     console.log('📤 Request a:', config.url);
     if (token) {

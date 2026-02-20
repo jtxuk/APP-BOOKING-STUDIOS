@@ -104,7 +104,12 @@ export default function MyBookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: GlobalStyles.container,
+  container: {
+    ...GlobalStyles.container,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 800,
+  },
   centerContainer: GlobalStyles.centerContainer,
   listContent: GlobalStyles.listContent,
   bookingCard: {

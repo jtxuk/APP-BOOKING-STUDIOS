@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { authAPI } from '../services/api';
 import Colors from '../constants/Colors';
 import { GlobalStyles } from '../constants/GlobalStyles';
+import storage from '../utils/storage';
 
 export default function LoginScreen({ setUserToken }) {
   const [email, setEmail] = useState('');
@@ -32,11 +32,11 @@ export default function LoginScreen({ setUserToken }) {
       const { token, user } = response.data;
       
       console.log('✅ Login exitoso, guardando token...');
-      await SecureStore.setItemAsync('userToken', token);
-      await SecureStore.setItemAsync('user', JSON.stringify(user));
+      await storage.setItem('userToken', token);
+      await storage.setItem('user', JSON.stringify(user));
       
       console.log('✅ Token guardado, verificando...');
-      const savedToken = await SecureStore.getItemAsync('userToken');
+      const savedToken = await storage.getItem('userToken');
       console.log('🔍 Token recuperado después de guardar:', savedToken ? 'Sí' : 'No');
       
       // Actualizar el estado para navegar a la app
@@ -51,46 +51,48 @@ export default function LoginScreen({ setUserToken }) {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../assets/logo-millenia-v2-png.webp')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-      
-      <View style={styles.content}>
-        <Text style={styles.title}>Booking Millenia</Text>
-        <Text style={styles.subtitle}>Acceso Restringido</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!loading}
+      <View style={styles.loginBox}>
+        <Image
+          source={require('../assets/logo-millenia-v2-png.webp')}
+          style={styles.logo}
+          resizeMode="contain"
         />
+        
+        <View style={styles.content}>
+          <Text style={styles.title}>Booking Millenia</Text>
+          <Text style={styles.subtitle}>Acceso Restringido</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+          />
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Iniciar Sesión</Text>
-          )}
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!loading}
+          />
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -101,7 +103,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  loginBox: {
+    width: '100%',
+    maxWidth: 400,
   },
   logo: {
     width: 280,

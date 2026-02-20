@@ -233,8 +233,9 @@ export default function CalendarScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
+    backgroundColor: '#f5f5f5',    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 800,  },
   calendarContainer: {
     backgroundColor: '#fff',
     padding: 15,

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { stackScreenOptions } from './constants/GlobalStyles';
+import storage from './utils/storage';
 
 import LoginScreen from './screens/LoginScreen';
 import StudioListScreen from './screens/StudioListScreen';
@@ -110,7 +110,7 @@ export default function App() {
 
   const bootstrapAsync = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await storage.getItem('userToken');
       setUserToken(token);
     } catch (e) {
       console.log(e);
