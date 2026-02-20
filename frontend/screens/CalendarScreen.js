@@ -7,6 +7,7 @@ import {
   Text,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { studioAPI, bookingAPI, userAPI, adminAPI } from '../services/api';
@@ -27,6 +28,28 @@ export default function CalendarScreen({ route }) {
   const [booking, setBooking] = useState(false);
   const [markedDates, setMarkedDates] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n\n${message}`);
+      return;
+    }
+    Alert.alert(title, message);
+  };
+
+  const showConfirm = (title, message, onConfirm) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed) {
+        onConfirm();
+      }
+      return;
+    }
+    Alert.alert(title, message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Aceptar', onPress: onConfirm },
+    ]);
+  };
 
   useEffect(() => {
     checkAdminStatus();
@@ -84,7 +107,7 @@ export default function CalendarScreen({ route }) {
       const response = await studioAPI.getTimeSlots(studio.id, date);
       setTimeSlots(response.data);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar los horarios');
+      showAlert('Error', 'No se pudieron cargar los horarios');
     } finally {
       setLoading(false);
     }
@@ -93,6 +116,27 @@ export default function CalendarScreen({ route }) {
   const handleBookSlot = async (slot) => {
     // Si es admin y el slot está reservado, mostrar opciones
     if (isAdmin && slot.status === 'booked') {
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(`Reservado por: ${slot.initials}\n¿Eliminar esta reserva?`);
+        if (confirmed) {
+          try {
+            const bookingsResponse = await adminAPI.getAllBookings();
+            const booking = bookingsResponse.data.find(
+              b => b.time_slot_id === slot.id && b.status === 'confirmed'
+            );
+
+            if (booking) {
+              await adminAPI.cancelBooking(booking.id);
+              showAlert('Éxito', 'Reserva eliminada');
+              fetchTimeSlots(selectedDate);
+            }
+          } catch (error) {
+            showAlert('Error', 'No se pudo eliminar la reserva');
+          }
+        }
+        return;
+      }
+
       Alert.alert(
         'Gestión de Reserva',
         `Reservado por: ${slot.initials}\n¿Qué deseas hacer?`,
@@ -103,12 +147,11 @@ export default function CalendarScreen({ route }) {
             style: 'destructive',
             onPress: async () => {
               try {
-                // Buscar el booking_id desde el slot
                 const bookingsResponse = await adminAPI.getAllBookings();
                 const booking = bookingsResponse.data.find(
                   b => b.time_slot_id === slot.id && b.status === 'confirmed'
                 );
-                
+
                 if (booking) {
                   await adminAPI.cancelBooking(booking.id);
                   Alert.alert('Éxito', 'Reserva eliminada');
@@ -125,22 +168,22 @@ export default function CalendarScreen({ route }) {
     }
 
     if (slot.status === 'booked') {
-      Alert.alert('No disponible', 'Este horario ya está reservado');
+      showAlert('No disponible', 'Este horario ya está reservado');
       return;
     }
 
     if (slot.status === 'blocked') {
-      Alert.alert('Bloqueado', 'Este horario no está disponible');
+      showAlert('Bloqueado', 'Este horario no está disponible');
       return;
     }
 
     setBooking(true);
     try {
       await bookingAPI.createBooking(studio.id, slot.id, selectedDate);
-      Alert.alert('Éxito', 'Reserva realizada correctamente');
+      showAlert('Éxito', 'Reserva realizada correctamente');
       fetchTimeSlots(selectedDate);
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al realizar la reserva');
+      showAlert('Error', error.response?.data?.error || 'Error al realizar la reserva');
     } finally {
       setBooking(false);
     }

@@ -17,6 +17,12 @@
 - **Logout en web** usando confirmación nativa (`window.confirm`)
 - **Timeout del cliente** ampliado y mejor logging de respuestas
 
+### 🧩 UX Web (mensajes y confirmaciones)
+
+- **Alertas nativas en web** para errores de reserva y estados de slots
+- **Confirmación web** para cancelar reservas desde Calendario
+- **Confirmación web** para cancelar reservas desde Mis Reservas
+
 ## [Actualización 19 Febrero 2026]
 
 ### 🎨 Mejoras de Interfaz

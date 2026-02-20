@@ -7,6 +7,7 @@ import {
   Text,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { bookingAPI } from '../services/api';
@@ -35,7 +36,25 @@ export default function MyBookingsScreen() {
     }
   };
 
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
+    const doCancel = async () => {
+      try {
+        await bookingAPI.cancelBooking(bookingId);
+        Alert.alert('Éxito', 'Reserva cancelada correctamente');
+        fetchBookings();
+      } catch (error) {
+        Alert.alert('Error', 'No se pudo cancelar la reserva');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('¿Estás seguro de que deseas cancelar esta reserva?');
+      if (confirmed) {
+        await doCancel();
+      }
+      return;
+    }
+
     Alert.alert(
       'Cancelar Reserva',
       '¿Estás seguro de que deseas cancelar esta reserva?',
@@ -43,15 +62,7 @@ export default function MyBookingsScreen() {
         { text: 'No', onPress: () => {} },
         {
           text: 'Sí, cancelar',
-          onPress: async () => {
-            try {
-              await bookingAPI.cancelBooking(bookingId);
-              Alert.alert('Éxito', 'Reserva cancelada correctamente');
-              fetchBookings();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo cancelar la reserva');
-            }
-          },
+          onPress: doCancel,
         },
       ]
     );
