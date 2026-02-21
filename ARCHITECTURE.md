@@ -89,6 +89,8 @@
 2. CalendarScreen
    │
    ├─ Muestra calendario
+   ├─ Bloquea sábados, domingos y festivos
+   ├─ GET /api/studios/holidays
    │
    ├─ Usuario selecciona fecha
    │

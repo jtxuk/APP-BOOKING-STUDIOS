@@ -62,6 +62,8 @@ export const studioAPI = {
     api.get('/studios'),
   getTimeSlots: (studioId, date) => 
     api.get(`/studios/${studioId}/slots/${date}`),
+  getHolidays: () =>
+    api.get('/studios/holidays'),
 };
 
 export const bookingAPI = {

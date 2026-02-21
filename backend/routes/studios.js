@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { verifyToken } = require('../middleware/auth');
+const { isHoliday } = require('../config/holidays');
+
+// Get holidays list (debe estar antes de rutas con parámetros)
+router.get('/holidays', verifyToken, async (req, res) => {
+  try {
+    const { holidays } = require('../config/holidays');
+    res.json(holidays);
+  } catch (error) {
+    console.error('Error fetching holidays:', error);
+    res.status(500).json({ error: 'Error al cargar los festivos' });
+  }
+});
 
 // Get all studios with their time slots for a specific date
 router.get('/:studioId/slots/:date', verifyToken, async (req, res) => {
@@ -20,15 +32,15 @@ router.get('/:studioId/slots/:date', verifyToken, async (req, res) => {
     }
 
     // Generar slots automáticamente si no existen para esta fecha
-    // Solo para días laborables (lunes a viernes)
+    // Solo para días laborables (lunes a viernes) que NO sean festivos
     const dayOfWeek = await db.query(
       "SELECT EXTRACT(DOW FROM $1::date) as dow",
       [date]
     );
     const dow = parseInt(dayOfWeek.rows[0].dow);
 
-    // Si es día laborable (1-5 = lunes a viernes)
-    if (dow >= 1 && dow <= 5) {
+    // Si es día laborable (1-5 = lunes a viernes) Y NO es festivo
+    if (dow >= 1 && dow <= 5 && !isHoliday(date)) {
       // Verificar si ya existen slots para esta fecha y estudio
       const existingSlots = await db.query(
         'SELECT id FROM time_slots WHERE studio_id = $1 AND slot_date = $2 LIMIT 1',

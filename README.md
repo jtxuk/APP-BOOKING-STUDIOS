@@ -28,6 +28,7 @@ booking-app/
 ✅ **8 Estudios**: Acceso a 8 estudios de grabación con categorías específicas
 ✅ **4 Slots por día**: Cada estudio tiene 4 turnos de 3 horas (08:00-20:00)
 ✅ **Solo días laborables**: Sábados y domingos bloqueados (aparecen en rojo)
+✅ **Festivos bloqueados**: Lista configurable y visibles en rojo en el calendario
 ✅ **Máximo 2 reservas**: Los usuarios pueden reservar máximo 2 slots
 ✅ **No consecutivos**: No se pueden reservar 2 slots seguidos en el mismo estudio
 ✅ **Sin solapamientos**: Nunca dos usuarios reservan el mismo slot
@@ -37,6 +38,7 @@ booking-app/
 ✅ **Sin pagos**: No hay procesamiento de pagos
 ✅ **Categorías de usuarios**: PME, EST-SUP, ING, PME+ING
 ✅ **Control de acceso temporal**: Sistema automático de expiración por curso
+✅ **Admins sin fin de acceso**: El rol admin no tiene fecha de expiración
 ✅ **Interfaz en español**: Logo personalizado, color corporativo #0E6BA8 y calendario en español
 ✅ **Panel de administración**: Gestión completa de alumnos (crear, editar, eliminar, activar/desactivar)
 ✅ **Gestión de reservas admin**: Los administradores pueden eliminar reservas desde el calendario
@@ -79,6 +81,8 @@ npm start    # Modo producción
 
 El backend estará disponible en `http://localhost:5000`
 
+Para festivos bloqueados, edita la lista en `backend/config/holidays.js`.
+
 ### Frontend
 
 ```bash
@@ -107,6 +111,7 @@ npm run web    # Web
 ### Estudios
 - `GET /api/studios` - Obtener todos los estudios
 - `GET /api/studios/:studioId/slots/:date` - Obtener slots de un estudio en una fecha
+- `GET /api/studios/holidays` - Obtener lista de festivos bloqueados
 
 ### Administración (requiere rol admin)
 - `GET /api/admin/users` - Obtener todos los usuarios

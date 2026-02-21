@@ -97,6 +97,7 @@ router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, phone, email, category, initials, role, fin_acceso, activo } = req.body;
+    const shouldNullAccessDate = role === 'admin';
     
     // Construir query dinámica solo con campos proporcionados
     const updates = [];
@@ -134,9 +135,12 @@ router.put('/users/:id', async (req, res) => {
       updates.push(`role = $${paramCount++}`);
       values.push(role);
     }
-    if (fin_acceso !== undefined) {
+    if (fin_acceso !== undefined && !shouldNullAccessDate) {
       updates.push(`fin_acceso = $${paramCount++}`);
       values.push(fin_acceso);
+    }
+    if (shouldNullAccessDate) {
+      updates.push('fin_acceso = NULL');
     }
     if (activo !== undefined) {
       updates.push(`activo = $${paramCount++}`);

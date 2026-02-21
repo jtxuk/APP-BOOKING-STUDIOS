@@ -33,7 +33,8 @@ booking-app/
 │    ├── 📄 create-user.bat               [Script crear usuario (Windows)]
 │    │
 │    ├─── 📁 config/
-│    │    └── 📄 database.js              [Configuración de conexión PostgreSQL]
+│    │    ├── 📄 database.js              [Configuración de conexión PostgreSQL]
+│    │    └── 📄 holidays.js              [Lista de festivos bloqueados]
 │    │
 │    ├─── 📁 middleware/
 │    │    └── 📄 auth.js                  [Middleware de autenticación JWT]
@@ -94,9 +95,9 @@ booking-app/
 TOTAL DE ARCHIVOS:
 ├─ Documentación: 9 archivos
 ├─ API Proxy: 2 archivos
-├─ Backend: 22 archivos
+├─ Backend: 23 archivos
 │  ├─ Raíz: 10 archivos
-│  ├─ config/: 1 archivo
+│  ├─ config/: 2 archivos
 │  ├─ middleware/: 1 archivo
 │  └─ routes/: 5 archivos
 └─ Frontend: 15 archivos

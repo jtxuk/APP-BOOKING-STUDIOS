@@ -8,7 +8,7 @@ git init
 git add .
 git commit -m "Initial commit: Full booking app implementation"
 git branch -M main
-git remote add origin https://github.com/tu-usuario/booking-app.git
+git remote add origin https://github.com/jtxuk/APP-BOOKING-STUDIOS.git
 git push -u origin main
 ```
 
@@ -94,6 +94,8 @@ ssh millenia@82.98.145.67 "cd /home/millenia/www/app-reservas/backend && npm ins
 ```
 
 **Nota**: El API público se expone vía `/api` usando el proxy PHP en `/home/millenia/www/app-reservas/api`.
+
+**Importante**: si haces `rsync --delete` del frontend a `/home/millenia/www/app-reservas/`, vuelve a subir también `/backend` y `/api`.
 
 ### Opción 1: Heroku (Gratis/Pagado)
 

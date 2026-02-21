@@ -85,6 +85,7 @@
 3. CALENDARIO
    ┌──────────────────────────┐
    │ Mostrar Calendario       │
+  │ Bloquear festivos        │
    │ Seleccionar Fecha        │
    │ (default: hoy)           │
    └──────────────────────────┘

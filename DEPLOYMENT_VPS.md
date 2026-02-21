@@ -30,6 +30,8 @@ cd "/Users/oficina2/APP BOOKING WRKSPC"
 scp -r backend/* root@tu-vps.dinahosting.com:/home/millenia/www/app-reservas/backend/
 ```
 
+**Nota**: el archivo `backend/config/holidays.js` controla los festivos bloqueados.
+
 ### 1.4 En el servidor, instala dependencias
 ```bash
 cd /home/millenia/www/app-reservas/backend
@@ -151,6 +153,8 @@ echo $response;
 ?>
 PHP
 ```
+
+**Importante**: si haces `rsync --delete` del frontend a `/home/millenia/www/app-reservas/`, vuelve a subir también `/backend` y `/api`.
 
 ### 2.2 .htaccess de /api
 

@@ -1,6 +1,22 @@
 # Changelog - Booking App
 
-## [Actualización 20 Febrero 2026]
+## [Actualización 20 Febrero 2026 (v1.0.1)]
+
+### 📅 Festivos Bloqueados
+
+- **Lista de festivos en backend** para bloquear días completos
+- **Calendario en rojo** para festivos (igual que fines de semana)
+- **Endpoint `/api/studios/holidays`** para consumir desde frontend
+
+### 👤 Acceso Admin
+
+- **Admins sin fecha fin de acceso** (`fin_acceso` queda en NULL)
+
+### 🏷️ Badge de Rol
+
+- **Badge de rol para alumnos** ahora muestra `ALUMN`
+
+## [Actualización 20 Febrero 2026 (v1.0.0)]
 
 ### 🚀 Producción Web (reservas.millenia.es)
 

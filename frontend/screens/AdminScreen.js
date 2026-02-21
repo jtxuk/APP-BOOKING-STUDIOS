@@ -193,32 +193,34 @@ export default function AdminScreen() {
     }
   };
 
-  const renderUserItem = ({ item }) => (
-    <View style={styles.userCard}>
-      <View style={styles.userHeader}>
-        <View style={styles.userInfo}>
-          <View style={styles.infoRow}>
-            <Text style={styles.userName}>{item.name}</Text>
-            {item.initials && (
-              <Text style={styles.initialsLarge}>{item.initials}</Text>
+  const renderUserItem = ({ item }) => {
+    const roleLabel = item.role === 'user' ? 'ALUMN' : (item.role || '').toUpperCase();
+    return (
+      <View style={styles.userCard}>
+        <View style={styles.userHeader}>
+          <View style={styles.userInfo}>
+            <View style={styles.infoRow}>
+              <Text style={styles.userName}>{item.name}</Text>
+              {item.initials && (
+                <Text style={styles.initialsLarge}>{item.initials}</Text>
+              )}
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.userEmail}>{item.email}</Text>
+              <Text style={[styles.badge, styles.categoryBadge]}>{item.category}</Text>
+            </View>
+            {item.fin_acceso && (
+              <View style={styles.infoRow}>
+                <Text style={styles.userDate}>
+                  Acceso hasta: {new Date(item.fin_acceso).toLocaleDateString('es-ES')}
+                </Text>
+                <Text style={[styles.badge, styles.roleBadge]}>{roleLabel}</Text>
+              </View>
             )}
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.userEmail}>{item.email}</Text>
-            <Text style={[styles.badge, styles.categoryBadge]}>{item.category}</Text>
-          </View>
-          {item.fin_acceso && (
-            <View style={styles.infoRow}>
-              <Text style={styles.userDate}>
-                Acceso hasta: {new Date(item.fin_acceso).toLocaleDateString('es-ES')}
-              </Text>
-              <Text style={[styles.badge, styles.roleBadge]}>{item.role}</Text>
-            </View>
-          )}
         </View>
-      </View>
-      
-      <View style={styles.actionsContainer}>
+        
+        <View style={styles.actionsContainer}>
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton]}
           onPress={() => handleEditUser(item)}
@@ -243,9 +245,10 @@ export default function AdminScreen() {
             {item.activo ? 'Activo' : 'Inactivo'}
           </Text>
         </View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (

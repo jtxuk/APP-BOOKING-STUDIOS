@@ -73,7 +73,9 @@ async function initializeDatabase() {
       CREATE OR REPLACE FUNCTION trigger_calcular_fin_acceso()
       RETURNS TRIGGER AS $$
       BEGIN
-        IF NEW.fin_acceso IS NULL THEN
+        IF NEW.role = 'admin' THEN
+          NEW.fin_acceso := NULL;
+        ELSIF NEW.fin_acceso IS NULL THEN
           NEW.fin_acceso := calcular_fin_acceso(NEW.category, NEW.created_at);
         END IF;
         RETURN NEW;
@@ -87,6 +89,10 @@ async function initializeDatabase() {
       BEFORE INSERT ON users
       FOR EACH ROW
       EXECUTE FUNCTION trigger_calcular_fin_acceso();
+    `);
+
+    await pool.query(`
+      UPDATE users SET fin_acceso = NULL WHERE role = 'admin';
     `);
 
     // Create studios table

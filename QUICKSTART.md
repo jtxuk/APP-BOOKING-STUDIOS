@@ -60,6 +60,7 @@ psql -U postgres -d booking_app -f seed.sql
 - 7 usuarios de prueba con acceso temporal
 - Slots solo para días laborables (lunes a viernes)
 - Sistema automático de cálculo de `fin_acceso`
+- Admins sin fecha fin de acceso
 
 ### Paso 5: Iniciar el servidor
 ```bash
@@ -67,6 +68,8 @@ npm run dev
 ```
 
 El servidor estará disponible en `http://localhost:5000`
+
+**Festivos**: para bloquear días completos, edita `backend/config/holidays.js`.
 
 ---
 

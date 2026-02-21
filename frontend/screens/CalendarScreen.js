@@ -9,7 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { studioAPI, bookingAPI, userAPI, adminAPI } from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 
@@ -20,6 +20,15 @@ const SLOTS = [
   { number: 4, start: '17:00', end: '20:00' },
 ];
 
+LocaleConfig.locales['es'] = {
+  monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+  monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+  dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+  dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+  today: 'Hoy',
+};
+LocaleConfig.defaultLocale = 'es';
+
 export default function CalendarScreen({ route }) {
   const { studio } = route.params;
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -28,6 +37,7 @@ export default function CalendarScreen({ route }) {
   const [booking, setBooking] = useState(false);
   const [markedDates, setMarkedDates] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [holidays, setHolidays] = useState([]);
 
   const showAlert = (title, message) => {
     if (Platform.OS === 'web') {
@@ -53,6 +63,7 @@ export default function CalendarScreen({ route }) {
 
   useEffect(() => {
     checkAdminStatus();
+    fetchHolidays();
     fetchTimeSlots(selectedDate);
   }, [selectedDate]);
 
@@ -62,6 +73,15 @@ export default function CalendarScreen({ route }) {
       setIsAdmin(response.data.role === 'admin');
     } catch (error) {
       console.log('Error checking admin status:', error);
+    }
+  };
+
+  const fetchHolidays = async () => {
+    try {
+      const response = await studioAPI.getHolidays();
+      setHolidays(response.data);
+    } catch (error) {
+      console.log('Error fetching holidays:', error);
     }
   };
 
@@ -75,8 +95,18 @@ export default function CalendarScreen({ route }) {
       const dateString = date.toISOString().split('T')[0];
       const dayOfWeek = date.getDay();
       
+      // Marcar fines de semana en rojo
       if (dayOfWeek === 0 || dayOfWeek === 6) {
-        // Sábados y domingos en rojo
+        marked[dateString] = {
+          disabled: true,
+          disableTouchEvent: true,
+          textColor: '#ff0000',
+          dotColor: '#ff0000',
+        };
+      }
+      
+      // Marcar festivos en rojo
+      if (holidays.includes(dateString)) {
         marked[dateString] = {
           disabled: true,
           disableTouchEvent: true,
@@ -89,7 +119,8 @@ export default function CalendarScreen({ route }) {
     // Agregar el día seleccionado
     if (selectedDate) {
       const selectedDay = new Date(selectedDate).getDay();
-      if (selectedDay !== 0 && selectedDay !== 6) {
+      const isHoliday = holidays.includes(selectedDate);
+      if (selectedDay !== 0 && selectedDay !== 6 && !isHoliday) {
         marked[selectedDate] = {
           ...marked[selectedDate],
           selected: true,
@@ -99,7 +130,7 @@ export default function CalendarScreen({ route }) {
     }
     
     setMarkedDates(marked);
-  }, [selectedDate]);
+  }, [selectedDate, holidays]);
 
   const fetchTimeSlots = async (date) => {
     try {
@@ -235,12 +266,6 @@ export default function CalendarScreen({ route }) {
             todayTextColor: '#0E6BA8',
             arrowColor: '#0E6BA8',
             textDisabledColor: '#ff0000',
-          }}
-          localeConfig={{
-            monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-            monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-            dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-            dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
           }}
         />
       </View>
