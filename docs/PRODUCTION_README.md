@@ -59,11 +59,34 @@ ps aux | grep node
 npm start  # En background o nueva sesión
 ```
 
-### Frontend (Web SPA)
+### Frontend (React Native / Expo Web)
 
-- El frontend está compilado y servido por Apache
-- Los cambios requieren rebuild del bundle de Expo
-- Ubicación: `/home/millenia/www/app-reservas/`
+**Estructura**:
+- `frontend/` = Código fuente (versionado en Git) ✅
+- `_expo/` = Compilado para producción (NO en Git, solo en servidor) ⚠️
+
+**Hacer cambios**:
+
+```bash
+# 1. Editar código fuente
+vim frontend/screens/AdminScreen.js
+
+# 2. Compilar (si node_modules no existe: npm install)
+cd /home/millenia/www/app-reservas/frontend
+npx expo export --platform web
+
+# 3. Copiar a producción
+rm -rf ../_expo/*
+cp -r dist/* ../_expo/
+
+# 4. Verificar en navegador
+# http://reservas.millenia.es
+```
+
+**IMPORTANTE**: 
+- Git versiona `frontend/` (código fuente)
+- Git NO versiona `_expo/` (está en .gitignore)
+- Apache sirve directamente desde `_expo/`
 
 ## 📚 Documentación Histórica
 
@@ -76,10 +99,13 @@ Los archivos en `/docs/` **contienen referencias históricas** a:
 
 ## 🔧 Cambios Recientes (Marzo 2026)
 
+- ✅ Botón "Ver Historial" en AdminScreen (ver reservas pasadas de usuarios)
 - ✅ Sistema de invalidación de sesiones (`token_version`)
 - ✅ Forzar cambio de contraseña tras reset por admin
 - ✅ Validación de `must_change_password` en login
 - ✅ Endpoint `POST /api/admin/users/:id/reset-password`
+- ✅ Endpoint `GET /api/admin/bookings/history?userId=X`
+- ✅ Estructura reorganizada: `frontend/` (fuente) vs `_expo/` (compilado)
 
 ## 📞 Contacto
 

@@ -31,11 +31,37 @@
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Arquitectura técnica
 - [backend/README.md](./backend/README.md) - API Backend
 
+## � Estructura del Proyecto
+
+```
+app-reservas/
+├── backend/          # API Node.js + Express (código fuente)
+├── frontend/         # React Native/Expo (código fuente) ✅ Versionado en Git
+├── _expo/            # Frontend compilado para web ⚠️ NO en Git (solo servidor)
+├── docs/             # Documentación
+└── .gitignore        # _expo/ excluido del repositorio
+```
+
+### 🔄 Workflow de Desarrollo
+
+**Frontend**:
+- **Editar**: `frontend/` (código fuente React Native)
+- **Compilar**: `cd frontend && npx expo export --platform web`
+- **Deploy**: Copiar `frontend/dist/*` a `_expo/`
+- **Git**: Solo `frontend/` está versionado, `_expo/` solo existe en servidor
+
+**Backend**:
+- **Editar**: `backend/` (código fuente Node.js)
+- **Reiniciar**: `cd backend && npm start`
+- **Git**: Todo `backend/` está versionado
+
 ## 🛠️ Cambios Recientes (v1.0.3)
 
+- ✅ Botón "Ver Historial" en panel admin para historial de reservas
 - ✅ Sistema de invalidación de sesiones (`token_version`)
 - ✅ Forzar cambio de contraseña tras reset por admin
 - ✅ Endpoint `POST /api/admin/users/:id/reset-password`
+- ✅ Endpoint `GET /api/admin/bookings/history?userId=X`
 
 ---
 
