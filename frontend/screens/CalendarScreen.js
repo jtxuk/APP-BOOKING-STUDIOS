@@ -306,24 +306,24 @@ const styles = StyleSheet.create({
     maxWidth: 800,  },
   calendarContainer: {
     backgroundColor: '#fff',
-    padding: 15,
+    padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   slotsContainer: {
     flex: 1,
-    padding: 15,
+    padding: 8,
   },
   studioTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    marginBottom: 15,
+    marginBottom: 10,
     textTransform: 'capitalize',
   },
   centerContainer: {
@@ -334,8 +334,8 @@ const styles = StyleSheet.create({
   slotCard: {
     backgroundColor: '#fff',
     borderRadius: 2,
-    padding: 12,
-    marginBottom: 8,
+    padding: 8,
+    marginBottom: 5,
     borderLeftWidth: 4,
     borderLeftColor: '#4CAF50',
   },
@@ -344,13 +344,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   slotTime: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 2,
   },
   slotStatus: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#4CAF50',
   },
   statusBooked: {

@@ -1,9 +1,14 @@
 # Booking App - Sistema de Reservas para Estudios de Grabación
 
-> ⚠️ **ENTORNO DE PRODUCCIÓN**  
-> Este sistema está **EN PRODUCCIÓN** en `reservas.millenia.es` con usuarios reales.  
-> **NO ejecutar scripts de inicialización (seed.sql)** - destruirían datos reales.  
-> Toda referencia a `localhost` o usuarios `@example.com` es histórica.
+> 🔴 **⚠️ SISTEMA EN PRODUCCIÓN ACTIVA**
+> 
+> **ESTA APLICACIÓN ESTÁ DESPLEGADA EN https://reservas.millenia.es**
+> - ✅ Usuarios REALES usando el sistema ahora
+> - ✅ Base de datos en PRODUCCIÓN con datos reales
+> - ❌ **NO abrir en localhost ni con Expo Go**
+> - ❌ **NO ejecutar seed.sql en el servidor**
+> 
+> Si editas código, **DEBE recompilarse y desplegarse correctamente** o romperás la app para usuarios reales.
 
 Aplicación completa (iOS, Android y Web) para reservar slots de 3 horas en 8 estudios de grabación. En producción se sirve como SPA en Apache y el API se expone vía proxy PHP en `/api`.
 
@@ -58,9 +63,16 @@ booking-app/
 ✅ **Generación dinámica de slots**: El backend crea automáticamente slots para cualquier fecha solicitada
 ✅ **UI mejorada**: Categorías colapsables, ordenación por nombre/fecha, badges organizados
 
-## Instalación y Configuración
+## ⚠️ DESARROLLO LOCAL - NO CONFUNDIR CON PRODUCCIÓN
 
-> ⚠️ **El sistema ya está en producción en `reservas.millenia.es`. Esta sección es solo para desarrollo local.**
+**LA APP EN PRODUCCIÓN ESTÁ EN: https://reservas.millenia.es**
+
+Esta sección es **ÚNICAMENTE para desarrollo local en tu máquina**.
+
+- 🟢 Desarrollo local → `localhost:5000` + Expo (solo tu máquina)
+- 🔴 Producción → `reservas.millenia.es` (usuarios reales)
+
+**NO** hagas nada de lo siguiente EN el servidor de producción.
 
 ### Backend
 

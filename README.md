@@ -1,35 +1,54 @@
 # Reservas Millenia - Sistema de Gestión de Estudios
 
-## 🔴 ⚠️ ENTORNO DE PRODUCCIÓN ⚠️
+## 🔴 ⚠️ **SISTEMA EN PRODUCCIÓN ACTIVA** ⚠️
 
-**Este sistema está DESPLEGADO Y FUNCIONANDO en producción.**
+**LA APLICACIÓN ESTÁ DESPLEGADA EN https://reservas.millenia.es CON USUARIOS REALES USANDO AHORA**
 
-### 📖 Antes de hacer CUALQUIER cosa, lee:
+### 📖 SI ERES NUEVO O TIENES DUDAS - LEE ESTO PRIMERO:
 
-👉 **[PRODUCTION_README.md](./PRODUCTION_README.md)** 👈
+👉 **[PRODUCCION_VS_DESARROLLO.md](./docs/PRODUCCION_VS_DESARROLLO.md)** - Explica diferencia entre desarrollo local y producción
+
+El siguiente es obligatorio ANTES de hacer cambios:
+
+👉 **[PRODUCTION_README.md](./PRODUCTION_README.md)** - Protocolo de seguridad en producción
 
 ## ⚡ Info Rápida
 
-- **Frontend**: http://reservas.millenia.es
-- **Backend API**: http://reservas.millenia.es/api
-- **Usuarios**: Reales `@millenia.es` (no hay usuarios de prueba)
+- **Frontend en Producción**: https://reservas.millenia.es (NO localhost ni QR)
+- **Backend API**: https://reservas.millenia.es/api  
+- **Usuarios**: REALES en base de datos de producción
 - **Base de datos**: PostgreSQL con datos de producción
 
-## ⛔ NO Hacer
+## 🚨 ACLARACIÓN CRÍTICA
 
-- ❌ Ejecutar `seed.sql`
-- ❌ Usar `localhost` en pruebas
-- ❌ Crear usuarios `@example.com`
-- ❌ Truncar tablas
-- ❌ Hacer cambios sin backup
+> **Desarrollo local ≠ Desarrollo en servidor**
+>
+> Aunque sea "desarrollo" (editar código), si lo haces en `/home/millenia/www/app-reservas` es **PRODUCCIÓN**:
+> - Usuarios REALES están usando la app AHORA
+> - Cambios aparecen INMEDIATAMENTE sin testing
+> - Un error rompe la app para TODOS
+> 
+> **Solo edita en el servidor en caso de EMERGENCIA.**
+
+## ⛔ PROHIBIDO en Servidor Producción
+
+- ❌ Ejecutar `npm start` (Expo) - la web se cae
+- ❌ Ejecutar `seed.sql` - destruye datos reales
+- ❌ Tocar `.env` - contiene secretos
+- ❌ Usar `localhost` - no funciona en servidor remoto
+- ❌ Truncar tablas o crear bases de datos
+- ❌ Cambiar archivos compilados en `_expo/`
+- ❌ Hacer cambios sin Git + backup
 
 ## 📚 Documentación
 
-- **[PRODUCTION_README.md](./PRODUCTION_README.md)** - **LEER PRIMERO** 🔴
-- [docs/README.md](./docs/README.md) - Funcionalidades del sistema
-- [docs/CHANGELOG.md](./docs/CHANGELOG.md) - Historial de cambios
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Arquitectura técnica
-- [backend/README.md](./backend/README.md) - API Backend
+1. **[docs/PRODUCCION_VS_DESARROLLO.md](./docs/PRODUCCION_VS_DESARROLLO.md)** - 🔴 **LEER SI TIENES DUDAS**
+2. **[PRODUCTION_README.md](./PRODUCTION_README.md)** - Protocolo de producción
+3. [docs/README.md](./docs/README.md) - Funcionalidades del sistema
+4. [docs/CHANGELOG.md](./docs/CHANGELOG.md) - Historial de cambios
+5. [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Arquitectura técnica
+6. [docs/DEVELOPMENT_WORKFLOW.md](./docs/DEVELOPMENT_WORKFLOW.md) - Workflow seguro
+7. [backend/README.md](./backend/README.md) - API Backend
 
 ## � Estructura del Proyecto
 
@@ -55,8 +74,49 @@ app-reservas/
 - **Reiniciar**: `cd backend && npm start`
 - **Git**: Todo `backend/` está versionado
 
-## 🛠️ Cambios Recientes (v1.0.3)
+## � WORKFLOW SEGURO: Desarrollo Local → Producción
 
+Este es el flujo correcto para hacer cambios:
+
+**PASO 1: Editar EN TU MÁQUINA (NO en servidor)**
+```bash
+cd /tu/ruta/app-reservas
+vim frontend/screens/AdminScreen.js  # Editar
+```
+
+**PASO 2: Probar EN TU MÁQUINA (NO en servidor)**
+```bash
+cd frontend && npm start
+# Abre http://localhost:8082 en tu navegador
+# Verifica cambios funcionan correctamente
+```
+
+**PASO 3: Commit y Push a Git (después de testing exitoso)**
+```bash
+git add .
+git commit -m "Agregar botón Ver Historial"
+git push origin main
+```
+
+**PASO 4: Desplegar en servidor (SOLO después de todo lo anterior)**
+```bash
+# SSH a servidor
+ssh usuario@reservas.millenia.es
+cd /home/millenia/www/app-reservas
+git pull
+npm run build  # Si es necesario recompilar
+# Reiniciar backend si es necesario
+```
+
+## Cambios Recientes (v1.0.4)
+
+- ✅ **Buscador en Gestión de Alumnos**: Campo "Buscar alumno..." para encontrar rápidamente alumnos por nombre/email/iniciales
+- ✅ **Optimización de Pantalla Calendario**: Reducción de espacios para ver 4 slots sin scroll en móvil vertical
+- ✅ **Fixes de fechas**: Corregido problema de "Invalid Date" en historial de reservas
+
+## Versiones anteriores
+
+### v1.0.3
 - ✅ Botón "Ver Historial" en panel admin para historial de reservas
 - ✅ Sistema de invalidación de sesiones (`token_version`)
 - ✅ Forzar cambio de contraseña tras reset por admin

@@ -1,10 +1,16 @@
 # 🚀 Guía de Inicio Rápido
 
-> ⚠️ **ADVERTENCIA: SISTEMA EN PRODUCCIÓN**  
-> Esta aplicación está **DESPLEGADA Y FUNCIONANDO EN PRODUCCIÓN** en `reservas.millenia.es`.  
-> La base de datos contiene **usuarios y reservas reales**.  
-> **NUNCA ejecutes `seed.sql`** en el servidor - destruiría todos los datos.  
-> Esta guía es únicamente de referencia histórica para desarrollo local.
+> 🔴 **SISTEMA EN PRODUCCIÓN - LEER PRIMERO**  
+> **Esta aplicación está DESPLEGADA y FUNCIONANDO en `reservas.millenia.es` CON USUARIOS REALES.**  
+> - ❌ NO se abre en `localhost`
+> - ❌ NO se escanea un código QR de Expo Go
+> - ✅ Se accede directamente en https://reservas.millenia.es
+> 
+> La base de datos contiene **usuarios y reservas reales en producción**.  
+> **ÚNICAMENTE edita esto si sabes exactamente qué estás haciendo.**  
+> **NUNCA ejecutes `seed.sql`** en el servidor - destruiría todos los datos reales.
+>
+> Esta guía es **SOLO para desarrollo local** en tu máquina con datos de prueba.
 
 ## Requisitos Previos
 

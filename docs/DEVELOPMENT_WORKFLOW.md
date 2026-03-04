@@ -1,8 +1,35 @@
 # Workflow de Desarrollo - App Reservas Millenia
 
+> 🔴 **⚠️ ATENCIÓN: SISTEMA EN PRODUCCIÓN**
+> 
+> - 🌐 **LA APP REAL ESTÁ EN:** https://reservas.millenia.es
+> - ✅ **Usuarios REALES la usan ahora**
+> - ❌ **NO es un proyecto local ni de desarrollo**
+> - ⚠️ **Cualquier error rompe la app para usuarios reales**
+>
+> Este documento explica cómo trabajar **SEGURAMENTE** con código fuente en una máquina local y luego desplegarlo en producción.
+
+## 📋 Diferencia: Desarrollo vs Producción
+
+| Aspecto | 🏠 Desarrollo Local (Tu PC) | 🔴 Servidor (PRODUCCIÓN, aunque edites código) |
+|---------|-------------------|---------------------------------------|
+| **URL** | http://localhost:5000 | https://reservas.millenia.es |
+| **Frontend** | `npm start` en tu PC (Expo) | Apache + compilado |
+| **Backend** | `npm run dev` en tu PC (nodemon) | Node.js en VPS |
+| **BD** | Datos de prueba (seed.sql) | **DATOS REALES - NO TOCAR** |
+| **`.env`** | Tus valores locales | Secretos del servidor privado |
+| **Acceso** | Solo tú | **Usuarios REALES** |
+| **Si hay error** | Solo tú ves el problema | TODOS ven el error |
+
+**REGLA DE ORO CRÍTICA:** 
+- Editar en `/home/millenia/www/app-reservas` = PRODUCCIÓN, aunque sea "código"
+- Cambios son INMEDIATOS sin testing
+- Un error afecta TODOS los usuarios
+- SOLO en emergencia, NUNCA para desarrollo normal
+
 ## 📋 Resumen
 
-Este documento explica cómo trabajar con el código fuente y compilar para producción.
+Este documento explica cómo trabajar con el código fuente DE FORMA SEGURA en desarrollo local.
 
 ## 🗂️ Estructura de Carpetas
 

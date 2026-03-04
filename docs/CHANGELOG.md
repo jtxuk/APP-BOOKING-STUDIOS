@@ -3,6 +3,28 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 4 Marzo 2026 (v1.0.4)]
+
+### Buscador en Gestión de Alumnos
+
+- **Campo de búsqueda**: Nuevo campo "Buscar alumno..." en la pantalla de Gestión de Alumnos
+  - Ubicado a la derecha del botón "Ordenar por"
+  - Busca en tiempo real por: nombre, email, iniciales
+  - Filtra dinámicamente la lista de alumnos mientras escribes
+  - Actualiza contador de alumnos por categoría según resultados
+  - Mejora significativa para encontrar alumnos rápidamente cuando hay muchos
+
+### Optimización de Pantalla de Calendario para Móvil
+
+- **Reducción de espacios**: Padding y márgenes comprimidos para móvil vertical
+  - Padding general: 15px → 8-10px
+  - Altura de slots: optimizada (padding 12 → 8px, márgenes reducidos)
+  - Fuentes ajustadas: Título 20pt → 18pt, slots 16pt → 14pt
+- **Objetivo cumplido**: 4 slots visibles sin scroll en móvil vertical
+  - Calendario mantiene legibilidad completa
+  - Todos los slots de la fecha visible sin necesidad de desplazarse
+  - Experiencia móvil mejorada significativamente
+
 ## [Actualización 4 Marzo 2026 (v1.0.3)]
 
 ### � Documentación de Producción

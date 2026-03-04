@@ -26,6 +26,7 @@ export default function AdminScreen() {
     'PME+ING': true
   });
   const [sortBy, setSortBy] = useState('name'); // 'name' o 'date'
+  const [searchText, setSearchText] = useState(''); // Búsqueda de alumnos
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -65,6 +66,13 @@ export default function AdminScreen() {
     }));
   };
 
+  const filterBySearch = (user) => {
+    const searchLower = searchText.toLowerCase();
+    return user.name.toLowerCase().includes(searchLower) || 
+           user.email.toLowerCase().includes(searchLower) ||
+           (user.initials && user.initials.toLowerCase().includes(searchLower));
+  };
+
   const sortUsers = (usersList) => {
     return [...usersList].sort((a, b) => {
       if (sortBy === 'name') {
@@ -82,8 +90,11 @@ export default function AdminScreen() {
     const categoryOrder = ['PME', 'EST-SUP', 'ING', 'PME+ING'];
     const groupedUsers = {};
 
+    // Filtrar usuarios por searchText
+    const filteredUsers = users.filter(filterBySearch);
+
     // Agrupar usuarios por categoría
-    users.forEach(user => {
+    filteredUsers.forEach(user => {
       const category = user.category || 'Sin categoría';
       if (!groupedUsers[category]) {
         groupedUsers[category] = [];
@@ -292,19 +303,29 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>Ordenar por:</Text>
-        <TouchableOpacity
-          style={[styles.sortButton, sortBy === 'name' && styles.sortButtonActive]}
-          onPress={() => setSortBy('name')}
-        >
-          <Text style={[styles.sortButtonText, sortBy === 'name' && styles.sortButtonTextActive]}>Nombre</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.sortButton, sortBy === 'date' && styles.sortButtonActive]}
-          onPress={() => setSortBy('date')}
-        >
-          <Text style={[styles.sortButtonText, sortBy === 'date' && styles.sortButtonTextActive]}>Fecha</Text>
-        </TouchableOpacity>
+        <View style={styles.sortLeft}>
+          <Text style={styles.sortLabel}>Ordenar por:</Text>
+          <TouchableOpacity
+            style={[styles.sortButton, sortBy === 'name' && styles.sortButtonActive]}
+            onPress={() => setSortBy('name')}
+          >
+            <Text style={[styles.sortButtonText, sortBy === 'name' && styles.sortButtonTextActive]}>Nombre</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sortButton, sortBy === 'date' && styles.sortButtonActive]}
+            onPress={() => setSortBy('date')}
+          >
+            <Text style={[styles.sortButtonText, sortBy === 'date' && styles.sortButtonTextActive]}>Fecha</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar alumno..."
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholderTextColor="#999"
+        />
       </View>
 
       <SectionList
@@ -324,7 +345,7 @@ export default function AdminScreen() {
               <Text style={styles.sectionTitle}>{title}</Text>
             </View>
             <Text style={styles.sectionCount}>
-              {users.filter(u => u.category === title).length} alumno{users.filter(u => u.category === title).length !== 1 ? 's' : ''}
+              {users.filter(u => u.category === title && filterBySearch(u)).length} alumno{users.filter(u => u.category === title && filterBySearch(u)).length !== 1 ? 's' : ''}
             </Text>
           </TouchableOpacity>
         )}
@@ -507,15 +528,15 @@ export default function AdminScreen() {
                         </Text>
                       </View>
                       <Text style={styles.historyDate}>
-                        📅 {new Date(booking.booking_date).toLocaleDateString('es-ES', {
-                          weekday: 'long',
+                        {new Date(booking.slot_date).toLocaleDateString('es-ES', {
+                          weekday: 'short',
                           year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
+                          month: '2-digit',
+                          day: '2-digit'
                         })}
                       </Text>
                       <Text style={styles.historyTime}>
-                        🕐 {booking.start_time} - {booking.end_time}
+                        {booking.start_time} - {booking.end_time}
                       </Text>
                       <Text style={styles.historyCreated}>
                         Reservada: {new Date(booking.created_at).toLocaleDateString('es-ES')}
@@ -698,16 +719,24 @@ const styles = StyleSheet.create({
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 10,
     backgroundColor: '#f5f5f5',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    gap: 10,
+  },
+  sortLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   sortLabel: {
     fontSize: 14,
     color: '#666',
     marginRight: 10,
+    whiteSpace: 'nowrap',
   },
   sortButton: {
     paddingHorizontal: 15,
@@ -727,6 +756,18 @@ const styles = StyleSheet.create({
   },
   sortButtonTextActive: {
     color: '#fff',
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+    fontSize: 14,
+    color: '#333',
+    minWidth: 200,
   },
   sectionHeader: {
     backgroundColor: '#0E6BA8',
