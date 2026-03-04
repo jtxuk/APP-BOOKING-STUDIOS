@@ -107,6 +107,10 @@ export const adminAPI = {
     api.post('/admin/slots/block', { timeSlotId }),
   unblockSlot: (timeSlotId) =>
     api.delete(`/admin/slots/unblock/${timeSlotId}`),
+  
+  // Historial de reservas
+  getUserBookingHistory: (userId) =>
+    api.get(`/admin/bookings/history?userId=${userId}`),
 };
 
 export default api;

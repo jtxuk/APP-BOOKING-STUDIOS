@@ -36,6 +36,10 @@ export default function AdminScreen() {
     role: 'alum',
     activo: true,
   });
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -193,6 +197,21 @@ export default function AdminScreen() {
     }
   };
 
+  const handleViewHistory = async (user) => {
+    try {
+      setSelectedUserForHistory(user);
+      setLoadingHistory(true);
+      setHistoryModalVisible(true);
+      const response = await adminAPI.getUserBookingHistory(user.id);
+      setBookingHistory(response.data);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo cargar el historial de reservas');
+      console.error(error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   const renderUserItem = ({ item }) => {
     const roleLabel = item.role === 'user' ? 'ALUMN' : (item.role || '').toUpperCase();
     return (
@@ -226,6 +245,12 @@ export default function AdminScreen() {
           onPress={() => handleEditUser(item)}
         >
           <Text style={styles.actionButtonText}>Editar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.historyButton]}
+          onPress={() => handleViewHistory(item)}
+        >
+          <Text style={styles.actionButtonText}>Ver Historial</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
@@ -447,6 +472,71 @@ export default function AdminScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={historyModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setHistoryModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              Historial de Reservas - {selectedUserForHistory?.name}
+            </Text>
+            
+            {loadingHistory ? (
+              <ActivityIndicator size="large" color="#0E6BA8" style={{ marginVertical: 20 }} />
+            ) : (
+              <ScrollView style={{ maxHeight: 500 }}>
+                {bookingHistory.length === 0 ? (
+                  <Text style={styles.emptyHistoryText}>No hay reservas en el historial</Text>
+                ) : (
+                  bookingHistory.map((booking, index) => (
+                    <View key={index} style={styles.historyItem}>
+                      <View style={styles.historyHeader}>
+                        <Text style={styles.historyStudio}>{booking.studio_name}</Text>
+                        <Text style={[
+                          styles.historyStatus,
+                          booking.status === 'cancelled' && styles.historyCancelled,
+                          booking.status === 'completed' && styles.historyCompleted,
+                          booking.status === 'confirmed' && styles.historyConfirmed
+                        ]}>
+                          {booking.status === 'cancelled' ? 'CANCELADA' : 
+                           booking.status === 'completed' ? 'COMPLETADA' : 'CONFIRMADA'}
+                        </Text>
+                      </View>
+                      <Text style={styles.historyDate}>
+                        📅 {new Date(booking.booking_date).toLocaleDateString('es-ES', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </Text>
+                      <Text style={styles.historyTime}>
+                        🕐 {booking.start_time} - {booking.end_time}
+                      </Text>
+                      <Text style={styles.historyCreated}>
+                        Reservada: {new Date(booking.created_at).toLocaleDateString('es-ES')}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+            )}
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setHistoryModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -593,6 +683,9 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#0E6BA8',
+  },
+  historyButton: {
+    backgroundColor: '#2E7D32',
   },
   deleteButton: {
     backgroundColor: '#D32F2F',
@@ -773,5 +866,63 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  historyItem: {
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 2,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0E6BA8',
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  historyStudio: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  historyStatus: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 2,
+  },
+  historyCancelled: {
+    backgroundColor: '#FFEBEE',
+    color: '#D32F2F',
+  },
+  historyCompleted: {
+    backgroundColor: '#E8F5E9',
+    color: '#2E7D32',
+  },
+  historyConfirmed: {
+    backgroundColor: '#E3F2FD',
+    color: '#0E6BA8',
+  },
+  historyDate: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  historyTime: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  historyCreated: {
+    fontSize: 12,
+    color: '#999',
+  },
+  emptyHistoryText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 14,
+    marginVertical: 20,
   },
 });
