@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
   Switch,
+  Platform,
 } from 'react-native';
 import { adminAPI } from '../services/api';
 
@@ -25,7 +26,8 @@ export default function AdminScreen() {
     'ING': true,
     'PME+ING': true
   });
-  const [sortBy, setSortBy] = useState('name'); // 'name' o 'date'
+  const [sortBy, setSortBy] = useState('date'); // 'name' o 'date'
+  const [sortDropdownVisible, setSortDropdownVisible] = useState(false);
   const [searchText, setSearchText] = useState(''); // Búsqueda de alumnos
   const [formData, setFormData] = useState({
     name: '',
@@ -176,27 +178,41 @@ export default function AdminScreen() {
     }
   };
 
-  const handleDeleteUser = (user) => {
-    Alert.alert(
-      'Confirmar eliminación',
-      `¿Estás seguro de eliminar a ${user.name}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await adminAPI.deleteUser(user.id);
-              Alert.alert('Éxito', 'Usuario eliminado correctamente');
-              fetchUsers();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el usuario');
-            }
+  const handleDeleteUser = async (user) => {
+    // For web compatibility, use window.confirm
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`¿Estás seguro de eliminar a ${user.name}?`);
+      if (confirmed) {
+        try {
+          await adminAPI.deleteUser(user.id);
+          Alert.alert('Éxito', 'Usuario eliminado correctamente');
+          fetchUsers();
+        } catch (error) {
+          Alert.alert('Error', 'No se pudo eliminar el usuario');
+        }
+      }
+    } else {
+      Alert.alert(
+        'Confirmar eliminación',
+        `¿Estás seguro de eliminar a ${user.name}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await adminAPI.deleteUser(user.id);
+                Alert.alert('Éxito', 'Usuario eliminado correctamente');
+                fetchUsers();
+              } catch (error) {
+                Alert.alert('Error', 'No se pudo eliminar el usuario');
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleToggleActive = async (user) => {
@@ -261,7 +277,7 @@ export default function AdminScreen() {
           style={[styles.actionButton, styles.historyButton]}
           onPress={() => handleViewHistory(item)}
         >
-          <Text style={styles.actionButtonText}>Ver Historial</Text>
+          <Text style={styles.actionButtonText}>Historial</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
@@ -269,18 +285,6 @@ export default function AdminScreen() {
         >
           <Text style={styles.actionButtonText}>Eliminar</Text>
         </TouchableOpacity>
-        <View style={styles.toggleContainer}>
-          <Switch
-            value={item.activo}
-            onValueChange={() => handleToggleActive(item)}
-            trackColor={{ false: '#ccc', true: '#0E6BA8' }}
-            thumbColor={item.activo ? '#fff' : '#f4f3f4'}
-            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-          />
-          <Text style={[styles.toggleLabel, item.activo ? styles.toggleActive : styles.toggleInactive]}>
-            {item.activo ? 'Activo' : 'Inactivo'}
-          </Text>
-        </View>
         </View>
       </View>
     );
@@ -303,25 +307,42 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.sortContainer}>
-        <View style={styles.sortLeft}>
-          <Text style={styles.sortLabel}>Ordenar por:</Text>
+        <View style={styles.sortDropdownWrapper}>
           <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'name' && styles.sortButtonActive]}
-            onPress={() => setSortBy('name')}
+            style={styles.sortDropdownButton}
+            onPress={() => setSortDropdownVisible(!sortDropdownVisible)}
           >
-            <Text style={[styles.sortButtonText, sortBy === 'name' && styles.sortButtonTextActive]}>Nombre</Text>
+            <Text style={styles.sortDropdownText}>
+              Ordenar: {sortBy === 'name' ? 'Nombre' : 'Fecha'} ▼
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'date' && styles.sortButtonActive]}
-            onPress={() => setSortBy('date')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'date' && styles.sortButtonTextActive]}>Fecha</Text>
-          </TouchableOpacity>
+          {sortDropdownVisible && (
+            <View style={styles.sortDropdownMenu}>
+              <TouchableOpacity
+                style={styles.sortDropdownOption}
+                onPress={() => {
+                  setSortBy('date');
+                  setSortDropdownVisible(false);
+                }}
+              >
+                <Text style={[styles.sortDropdownOptionText, sortBy === 'date' && styles.sortDropdownOptionTextActive]}>Fecha</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.sortDropdownOption}
+                onPress={() => {
+                  setSortBy('name');
+                  setSortDropdownVisible(false);
+                }}
+              >
+                <Text style={[styles.sortDropdownOptionText, sortBy === 'name' && styles.sortDropdownOptionTextActive]}>Nombre</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar alumno..."
+          placeholder="Buscar..."
           value={searchText}
           onChangeText={setSearchText}
           placeholderTextColor="#999"
@@ -466,13 +487,20 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.switchContainer}>
-                <Text style={styles.label}>Alumno Activo:</Text>
-                <Switch
-                  value={formData.activo}
-                  onValueChange={(value) => setFormData({ ...formData, activo: value })}
-                  trackColor={{ false: '#ccc', true: '#0E6BA8' }}
-                />
+              <View style={styles.modalToggleContainer}>
+                <Text style={styles.label}>Estado del alumno:</Text>
+                <View style={styles.modalToggleWrapper}>
+                  <Switch
+                    value={formData.activo}
+                    onValueChange={(value) => setFormData({ ...formData, activo: value })}
+                    trackColor={{ false: '#ccc', true: '#0E6BA8' }}
+                    thumbColor={formData.activo ? '#fff' : '#f4f3f4'}
+                    style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                  />
+                  <Text style={[styles.toggleLabel, formData.activo ? styles.toggleActive : styles.toggleInactive]}>
+                    {formData.activo ? 'Activo' : 'Inactivo'}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.modalActions}>
@@ -726,39 +754,58 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     gap: 10,
+    zIndex: 999,
   },
-  sortLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  sortDropdownWrapper: {
+    position: 'relative',
+    zIndex: 1000,
   },
-  sortLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 10,
-    whiteSpace: 'nowrap',
-  },
-  sortButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 6,
-    borderRadius: 15,
+  sortDropdownButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#0E6BA8',
-    marginRight: 8,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+    minWidth: 160,
   },
-  sortButtonActive: {
-    backgroundColor: '#0E6BA8',
+  sortDropdownText: {
+    fontSize: 14,
+    color: '#333',
   },
-  sortButtonText: {
-    fontSize: 13,
+  sortDropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderTopWidth: 0,
+    borderRadius: 4,
+    marginTop: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1001,
+  },
+  sortDropdownOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  sortDropdownOptionText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  sortDropdownOptionTextActive: {
+    fontWeight: 'bold',
     color: '#0E6BA8',
-    fontWeight: '500',
-  },
-  sortButtonTextActive: {
-    color: '#fff',
   },
   searchInput: {
-    flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 4,
@@ -767,7 +814,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 14,
     color: '#333',
-    minWidth: 200,
+    width: 180,
   },
   sectionHeader: {
     backgroundColor: '#0E6BA8',
@@ -881,6 +928,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  modalToggleContainer: {
+    marginBottom: 20,
+  },
+  modalToggleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginTop: 8,
   },
   modalActions: {
     flexDirection: 'row',

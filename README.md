@@ -108,13 +108,24 @@ npm run build  # Si es necesario recompilar
 # Reiniciar backend si es necesario
 ```
 
-## Cambios Recientes (v1.0.4)
+## Cambios Recientes (v1.0.5 - 5 Marzo 2026)
 
+### 🎨 Mejoras UI/UX
+- ✅ **Select dropdown para ordenación**: Reemplazado badges por dropdown con "Fecha" por defecto
+- ✅ **Campo búsqueda optimizado**: Reducido a 180px, placeholder "Buscar..."
+- ✅ **Botón renombrado**: "Ver Historial" → "Historial"
+- ✅ **Toggle reubicado**: Activo/Inactivo movido a modal de edición con mejor diseño
+
+### 🐛 Corrección de Bugs
+- ✅ **Login error messages**: Ahora se muestran en UI (cuadro rojo) en vez de Alert
+- ✅ **Botón Eliminar fix**: Funciona correctamente en web (usa window.confirm)
+
+## Versiones anteriores
+
+### v1.0.4 (4 Marzo 2026)
 - ✅ **Buscador en Gestión de Alumnos**: Campo "Buscar alumno..." para encontrar rápidamente alumnos por nombre/email/iniciales
 - ✅ **Optimización de Pantalla Calendario**: Reducción de espacios para ver 4 slots sin scroll en móvil vertical
 - ✅ **Fixes de fechas**: Corregido problema de "Invalid Date" en historial de reservas
-
-## Versiones anteriores
 
 ### v1.0.3
 - ✅ Botón "Ver Historial" en panel admin para historial de reservas
@@ -126,4 +137,4 @@ npm run build  # Si es necesario recompilar
 ---
 
 **Entorno**: Producción  
-**Última actualización**: 4 Marzo 2026
+**Última actualización**: 5 Marzo 2026

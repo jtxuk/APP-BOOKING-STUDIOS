@@ -3,6 +3,51 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 5 Marzo 2026 (v1.0.5)]
+
+### 🎨 Mejoras UI/UX en Gestión de Alumnos
+
+- **Select dropdown para ordenación**: Reemplazado badges por dropdown select
+  - Ordenación por defecto: **Fecha** (más reciente primero)
+  - Dropdown estilizado igual que campo de búsqueda
+  - z-index correcto para aparecer sobre lista de usuarios
+  - Opciones: "Fecha" y "Nombre"
+  - Ocupa menos espacio en barra superior
+
+- **Campo de búsqueda optimizado**: Reducido ancho a 180px para mejor layout
+  - Placeholder cambiado: "Buscar alumno..." → "Buscar..."
+  - Todos los controles ahora caben en una línea sin overflow
+
+- **Botón Historial renombrado**: "Ver Historial" → "Historial"
+  - Texto más corto y directo
+  - Mejor aprovechamiento de espacio en móvil
+
+- **Toggle Activo/Inactivo reubicado**:
+  - ❌ Eliminado de vista principal de gestión (más limpio)
+  - ✅ Movido a modal de edición con estilo mejorado
+  - Usa diseño visual bonito (fondo gris, border, switch + label con colores)
+  - Etiqueta "Estado del alumno:"
+
+### 🐛 Corrección de Bugs
+
+- **Login error handling**: Ahora muestra mensajes de error correctamente
+  - Errores se muestran en UI (cuadro rojo) en vez de Alert.alert
+  - Mensajes específicos: "Credenciales inválidas", "Usuario desactivado", etc.
+  - Mejor feedback visual para usuarios web
+  - Errores se limpian al intentar nuevo login
+  - Console logging mejorado para debugging
+
+- **Botón Eliminar fix**: Ahora funciona correctamente en web
+  - Usa `window.confirm()` en plataforma web
+  - Mantiene `Alert.alert()` para mobile nativo
+  - Confirmación funcionando en ambas plataformas
+
+### 📦 Deployments
+
+- 7 compilaciones y deployments exitosos en producción
+- Bundles generados: `AppEntry-1968d928...`, `AppEntry-53118f58...`, `AppEntry-d62a34f4...`, `AppEntry-a39e3d55...`, `AppEntry-316e7d32...`, `AppEntry-89649f64...`, `AppEntry-057fa84a...`
+- Todos los cambios activos en https://reservas.millenia.es
+
 ## [Actualización 4 Marzo 2026 (v1.0.4)]
 
 ### Buscador en Gestión de Alumnos

@@ -266,6 +266,45 @@ export default function CalendarScreen({ route }) {
             todayTextColor: '#0E6BA8',
             arrowColor: '#0E6BA8',
             textDisabledColor: '#ff0000',
+            textDayFontSize: 13,
+            textMonthFontSize: 15,
+            'stylesheet.calendar.header': {
+              header: {
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingLeft: 10,
+                paddingRight: 10,
+                marginTop: 6,
+                alignItems: 'center',
+                paddingBottom: 5,
+              },
+              monthText: {
+                fontSize: 15,
+                fontWeight: 'bold',
+                paddingTop: 0,
+                paddingBottom: 0,
+                color: '#0E6BA8',
+                margin: 0,
+              },
+            },
+            'stylesheet.day.basic': {
+              base: {
+                width: 32,
+                height: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+              text: {
+                marginTop: 0,
+                fontSize: 13,
+                fontWeight: '300',
+                color: '#2d4150',
+              },
+            },
+          }}
+          style={{
+            paddingTop: 0,
+            paddingBottom: 5,
           }}
         />
       </View>
