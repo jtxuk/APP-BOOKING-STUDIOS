@@ -1,93 +1,63 @@
--- ⚠️⚠️⚠️ PELIGRO: NO EJECUTAR EN PRODUCCIÓN ⚠️⚠️⚠️
--- 
--- Este script DESTRUIRÁ TODOS LOS DATOS EXISTENTES (TRUNCATE)
--- 
--- ❌ NUNCA ejecutar en el servidor reservas.millenia.es
--- ❌ La base de datos tiene usuarios y reservas REALES
--- ❌ Este archivo es SOLO para referencia histórica
+-- ⚠️⚠️⚠️ PELIGRO: NO EJECUTAR EN PRODUCCION SI QUIERES CONSERVAR DATOS ⚠️⚠️⚠️
+-- Seed para reconstruir catalogos y usuarios actuales.
+-- Reservas y slots se dejan vacios intencionalmente.
 --
--- Si necesitas resetear la BD de DESARROLLO LOCAL, asegúrate de:
--- 1. Estar conectado a una BD de prueba LOCAL
--- 2. Tener backup de cualquier dato que necesites
--- 3. NO estar conectado al servidor de producción
---
--- ⚠️⚠️⚠️ PELIGRO: NO EJECUTAR EN PRODUCCIÓN ⚠️⚠️⚠️
+-- Passwords seed:
+-- - sara@millenia.es => s12345
+-- - iñaki@millenia.es => i12345
+-- - resto de usuarios => 123456
 
--- Script para inicializar la base de datos con datos de ejemplo
--- ATENCIÓN: Este script elimina todos los datos existentes
+-- SEGURIDAD: este script NO se ejecuta si no activas explicitamente la bandera.
+-- Para permitir ejecucion destructiva, descomenta esta linea:
+-- SET seed.allow_destructive = 'YES_I_UNDERSTAND';
 
--- Limpiar tablas en orden correcto (respetando foreign keys)
+DO $$
+BEGIN
+  IF COALESCE(current_setting('seed.allow_destructive', true), '') <> 'YES_I_UNDERSTAND' THEN
+    RAISE EXCEPTION
+      'Seed bloqueado por seguridad. Descomenta: SET seed.allow_destructive = ''YES_I_UNDERSTAND'';';
+  END IF;
+END $$;
+
+BEGIN;
+
 TRUNCATE TABLE bookings CASCADE;
 TRUNCATE TABLE time_slots CASCADE;
 TRUNCATE TABLE users RESTART IDENTITY CASCADE;
 TRUNCATE TABLE studios RESTART IDENTITY CASCADE;
 
--- Insertar estudios
-INSERT INTO studios (name, description, categories) VALUES
-('BOX 1', 'Producción, Mezcla y Mastering', 'PME,EST-SUP'),
-('BOX 2', 'Producción, Mezcla y Mastering', 'ING'),
-('ESTUDIO D', 'Grabación', 'ING,EST-SUP'),
-('ESTUDIO C', 'Grabación', 'PME,EST-SUP'),
-('BOX 4', 'Producción, Mezcla y Mastering', 'ING,PME'),
-('BOX 5', 'Producción, Sintetizadores', 'PME'),
-('BOX 6', 'Producción, Sintetizadores', 'PME,EST-SUP'),
-('ESTUDIO B', 'Mezcla y Mastering', 'ING')
+INSERT INTO studios (id, name, description, categories, created_at) VALUES
+(1, 'BOX 1', 'Produccion, Mezcla y Mastering', 'PME,EST-SUP', '2026-01-23 18:04:12.168+00'),
+(2, 'BOX 2', 'Produccion, Mezcla y Mastering', 'ING', '2026-01-23 18:04:12.168+00'),
+(3, 'ESTUDIO D', 'Grabacion', 'ING,EST-SUP', '2026-01-23 18:04:12.168+00'),
+(4, 'ESTUDIO C', 'Grabacion', 'PME', '2026-01-23 18:04:12.168+00'),
+(5, 'BOX 4', 'Produccion, Mezcla y Mastering', 'ING,PME', '2026-01-23 18:04:12.168+00'),
+(6, 'BOX 5', 'Produccion, Sintetizadores', 'PME', '2026-01-23 18:04:12.168+00'),
+(7, 'BOX 6', 'Produccion, Sintetizadores', 'PME,EST-SUP', '2026-01-23 18:04:12.168+00'),
+(8, 'ESTUDIO B', 'Mezcla y Mastering', 'ING', '2026-01-23 18:04:12.168+00')
 ON CONFLICT DO NOTHING;
 
--- Insertar usuarios de ejemplo
--- Password para todos: 123456
--- fin_acceso se calcula automáticamente mediante trigger:
---   PME: 30 julio + 2 años
---   EST-SUP: 30 julio + 2 años
---   ING: 30 julio + 1 año
---   ING+PME: 30 julio + 3 años
--- Juan es el administrador (role='admin')
-INSERT INTO users (name, phone, email, password_hash, category, initials, role) VALUES
-('Juan Perez', '+34612345678', 'juan@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'PME', 'JPZ', 'admin'),
-('María García', '+34612345679', 'maria@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'PME', 'MGC', 'user'),
-('Carlos López', '+34612345680', 'carlos@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'ING', 'CLP', 'user'),
-('Sofia Martínez', '+34612345681', 'sofia@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'ING', 'SMZ', 'user'),
-('Miguel Rodríguez', '+34612345682', 'miguel@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'EST-SUP', 'MRZ', 'user'),
-('Ana Torres', '+34612345683', 'ana@example.com', '$2a$10$VdGqak2cKeJZc27cxyXda.lMd/zl8DNKUk/Mrq9sA7SjmMvjAvrOe', 'EST-SUP', 'ATR', 'user')
+INSERT INTO users (
+  id, name, phone, email, password_hash, category, initials, role,
+  activo, must_change_password, token_version, created_at
+) VALUES
+(1, 'Josep Bru Llorens', '+34612345678', 'josep@millenia.es', '$2a$10$zWVfF1rs/4HZxFLOt1snoO9wWjnHHxAaw33ykCkvcWAye/9jlDRA.', 'PME', 'JBL', 'admin', true, false, 1, '2026-01-23 18:04:12.183+00'),
+(2, 'Sara Bernal Vitner', '+34612345679', 'sara@millenia.es', '$2a$10$pKUNAdEoAZKys.zGuCSAi.DgBnZtFDMTFKvZg0dvkzjYz7fcnPjd2', 'ING', 'SBV', 'admin', true, false, 3, '2026-01-23 18:04:12.183+00'),
+(3, 'Vicente Mezquita Leal', '+34612345680', 'vicente@millenia.es', '$2a$10$zWVfF1rs/4HZxFLOt1snoO9wWjnHHxAaw33ykCkvcWAye/9jlDRA.', 'ING', 'VML', 'admin', true, false, 1, '2026-01-23 18:04:12.183+00'),
+(4, 'Julen Alza Minguez', '+34612345681', 'julen@millenia.es', '$2a$10$zWVfF1rs/4HZxFLOt1snoO9wWjnHHxAaw33ykCkvcWAye/9jlDRA.', 'PME+ING', 'JAM', 'user', true, false, 1, '2026-01-23 18:04:12.183+00'),
+(5, 'Joan Ros', '+34612345682', 'joan@millenia.es', '$2a$10$zWVfF1rs/4HZxFLOt1snoO9wWjnHHxAaw33ykCkvcWAye/9jlDRA.', 'EST-SUP', 'JRR', 'user', true, false, 1, '2026-01-23 18:04:12.183+00'),
+(6, 'Iñaki Ariste Aznar', '+34612345683', 'iñaki@millenia.es', '$2a$10$T3LfWnJuzrY0ptxwXnazduC34j2YUVNKyUsHXHh8pQ/iaG4v4S75a', 'EST-SUP', 'IAA', 'user', true, false, 2, '2026-01-23 18:04:12.183+00'),
+(10, 'Ines Arizmendi Aranda', '612312312', 'pruebaiaa@gmail.com', '$2a$10$zWVfF1rs/4HZxFLOt1snoO9wWjnHHxAaw33ykCkvcWAye/9jlDRA.', 'PME', 'IAA2', 'user', true, false, 1, '2026-03-12 16:43:09.520+00')
 ON CONFLICT DO NOTHING;
 
--- Función para generar los time slots para todas las fechas y estudios
--- Excluye sábados (6) y domingos (0)
-DO $$
-DECLARE
-    v_studio_id INTEGER;
-    v_slot_num INTEGER;
-    v_date DATE;
-    v_start_hour INTEGER;
-    v_day_of_week INTEGER;
-BEGIN
-    FOR v_studio_id IN SELECT id FROM studios LOOP
-        FOR v_date IN SELECT CURRENT_DATE + i FROM generate_series(0, 30) i LOOP
-            v_day_of_week := EXTRACT(DOW FROM v_date);
-            -- Saltar sábados (6) y domingos (0)
-            IF v_day_of_week NOT IN (0, 6) THEN
-                FOR v_slot_num IN 1..4 LOOP
-                    v_start_hour := 8 + (v_slot_num - 1) * 3;
-                    INSERT INTO time_slots (studio_id, slot_number, start_time, end_time, slot_date)
-                    VALUES (
-                        v_studio_id,
-                        v_slot_num,
-                        LPAD(v_start_hour::TEXT, 2, '0') || ':00',
-                        LPAD((v_start_hour + 3)::TEXT, 2, '0') || ':00',
-                        v_date
-                    )
-                    ON CONFLICT DO NOTHING;
-                END LOOP;
-            END IF;
-        END LOOP;
-    END LOOP;
-END $$;
+SELECT setval(pg_get_serial_sequence('studios', 'id'), COALESCE((SELECT MAX(id) FROM studios), 1), true);
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), true);
+SELECT setval(pg_get_serial_sequence('time_slots', 'id'), COALESCE((SELECT MAX(id) FROM time_slots), 1), true);
+SELECT setval(pg_get_serial_sequence('bookings', 'id'), COALESCE((SELECT MAX(id) FROM bookings), 1), true);
 
--- Mostrar estadísticas
-SELECT 'Studios' as entity, COUNT(*) as count FROM studios
-UNION ALL
-SELECT 'Users', COUNT(*) FROM users
-UNION ALL
-SELECT 'Time Slots', COUNT(*) FROM time_slots
-UNION ALL
-SELECT 'Bookings', COUNT(*) FROM bookings;
+COMMIT;
+
+SELECT 'studios' AS entity, COUNT(*) AS count FROM studios
+UNION ALL SELECT 'users', COUNT(*) FROM users
+UNION ALL SELECT 'time_slots', COUNT(*) FROM time_slots
+UNION ALL SELECT 'bookings', COUNT(*) FROM bookings;

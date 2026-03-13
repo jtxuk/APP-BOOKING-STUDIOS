@@ -60,19 +60,18 @@ psql -U postgres -c "CREATE DATABASE booking_app;"
 ### Paso 4: Inicializar el schema y datos
 ```bash
 # Con Postgres.app (macOS):
-/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U oficina2 -d booking_app -f seed.sql
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql -U oficina2 -d booking_app -c "SET seed.allow_destructive='YES_I_UNDERSTAND';" -f seed.sql
 
 # O con PostgreSQL estándar:
-psql -U postgres -d booking_app -f seed.sql
+psql -U postgres -d booking_app -c "SET seed.allow_destructive='YES_I_UNDERSTAND';" -f seed.sql
 ```
 
 **Nota**: El script `seed.sql` ahora incluye:
+- Bloqueo de seguridad por defecto (no corre sin `SET seed.allow_destructive='YES_I_UNDERSTAND'`)
 - TRUNCATE para evitar duplicados
 - 8 estudios con categorías
-- 7 usuarios de prueba con acceso temporal
-- Slots solo para días laborables (lunes a viernes)
-- Sistema automático de cálculo de `fin_acceso`
-- Admins sin fecha fin de acceso
+- Usuarios actuales reales
+- `time_slots` y `bookings` vacíos intencionalmente
 
 ### Paso 5: Iniciar el servidor
 ```bash

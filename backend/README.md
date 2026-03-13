@@ -3,6 +3,8 @@
 > ⚠️ **PRODUCTION ENVIRONMENT**  
 > Running in PRODUCTION at `reservas.millenia.es` with real users.  
 > **DO NOT run seed.sql** - it will destroy production data.  
+> `seed.sql` now has a safety lock and requires explicit opt-in:  
+> `SET seed.allow_destructive='YES_I_UNDERSTAND';`  
 > All references to `localhost` or `@example.com` users are historical.
 
 Backend API for the Studio Booking application built with Node.js and Express.
