@@ -60,6 +60,32 @@ pm2 startup
 pm2 save
 ```
 
+> ⚠️ **Autoarranque tras reinicio del servidor**
+>
+> En hosting compartido (sin root/systemd), `pm2 startup` falla con `Init system not found`.
+> Opciones disponibles:
+>
+> **Opción 1 — `pm2 startup` (solo si hay acceso root/systemd)**
+> ```bash
+> pm2 startup   # genera e instala servicio systemd → falla en hosting compartido
+> pm2 save      # guarda lista de procesos → funciona siempre
+> ```
+>
+> **Opción 2 — Cron `@reboot` (sin root, recomendada para hosting compartido)**
+> ```bash
+> crontab -e
+> # Añadir esta línea:
+> @reboot sleep 10 && cd /home/millenia/www/app-reservas/backend && $(which node) $(which pm2) start server.js --name app-reservas
+> ```
+> - Seguro: corre bajo el usuario `millenia`, sin privilegios elevados
+> - No afecta a otras webs ni al servidor
+> - Limitación: solo arranca en reboot; si el proceso muere en mitad del día, PM2 lo relanza solo
+>
+> **Opción 3 — Passenger con subdominio (recomendada por el proveedor Dinaserver)**
+> Configurar un subdominio (ej: `api.reservas.millenia.es`) con Passenger en el panel de control.
+> Passenger actúa como supervisor y relanza el proceso Node.js automáticamente sin necesidad de PM2 ni root.
+> Consultar con soporte de Dinaserver para los pasos exactos.
+
 ---
 
 ## 🌐 Paso 2: Configurar Apache + Proxy PHP
