@@ -46,7 +46,7 @@ booking-app/
 ✅ **Sin reservas en pasado**: No se permiten reservas en fechas pasadas ni en slots de hoy cuyo inicio ya haya pasado
 ✅ **Reservas vigentes**: Solo aparecen en "Mis Reservas" las activas (presentes y futuras)
 ✅ **Histórico completo**: Sistema de histórico de reservas consultable por admins
-✅ **Usuario por iniciales**: Los usuarios se muestran por sus 3 iniciales
+✅ **Usuario por iniciales**: Los usuarios se muestran por sus iniciales (hasta 4 caracteres, formato libre)
 ✅ **Iniciales visibles**: Cada slot reservado muestra las iniciales del usuario en un badge compacto
 ✅ **Gestión de reservas**: Ver, crear y cancelar reservas
 ✅ **Sin registro frontend**: Solo se registran usuarios desde el backend
@@ -57,6 +57,11 @@ booking-app/
 ✅ **Interfaz en español**: Logo personalizado, color corporativo #0E6BA8 y calendario en español
 ✅ **Panel de administración**: Gestión completa de alumnos (crear, editar, eliminar, activar/desactivar)
 ✅ **Gestión de reservas admin**: Los administradores pueden eliminar reservas desde el calendario
+✅ **Admins sin restricciones**: Los administradores pueden reservar cualquier día (fines de semana, festivos) sin límite de slots
+✅ **Lógica PME+ING por curso**: Acceso a PME los 2 primeros cursos, ING a partir del 3º (corte 20 septiembre)
+✅ **Cambio de categoría rastreado**: `category_start_date` registra cuándo cambió la categoría; `fin_acceso` se recalcula automáticamente
+✅ **Estudio C exclusivo PME**: Solo alumnos PME tienen acceso al Estudio C
+✅ **Error claro por iniciales duplicadas**: El admin ve mensaje específico en modal si las iniciales ya están en uso
 ✅ **Estilos globales**: Sistema centralizado de colores y estilos (Colors.js, GlobalStyles.js)
 ✅ **Control de slots bloqueados**: Visualización de slots bloqueados por administradores
 ✅ **Cambio de contraseña**: Funcionalidad para que los usuarios cambien su contraseña

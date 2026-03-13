@@ -19,6 +19,7 @@ router.get('/holidays', verifyToken, async (req, res) => {
 router.get('/:studioId/slots/:date', verifyToken, async (req, res) => {
   try {
     const { studioId, date } = req.params;
+    const isAdmin = req.user.role === 'admin';
 
     // Verify date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -32,15 +33,15 @@ router.get('/:studioId/slots/:date', verifyToken, async (req, res) => {
     }
 
     // Generar slots automáticamente si no existen para esta fecha
-    // Solo para días laborables (lunes a viernes) que NO sean festivos
+    // Usuarios normales: solo laborables no festivos. Admin: cualquier día.
     const dayOfWeek = await db.query(
       "SELECT EXTRACT(DOW FROM $1::date) as dow",
       [date]
     );
     const dow = parseInt(dayOfWeek.rows[0].dow);
 
-    // Si es día laborable (1-5 = lunes a viernes) Y NO es festivo
-    if (dow >= 1 && dow <= 5 && !isHoliday(date)) {
+    const canGenerateSlots = isAdmin || (dow >= 1 && dow <= 5 && !isHoliday(date));
+    if (canGenerateSlots) {
       // Verificar si ya existen slots para esta fecha y estudio
       const existingSlots = await db.query(
         'SELECT id FROM time_slots WHERE studio_id = $1 AND slot_date = $2 LIMIT 1',

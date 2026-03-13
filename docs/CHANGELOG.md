@@ -3,6 +3,77 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 13 Marzo 2026 (v1.0.6)]
+
+### 🔓 Administradores sin restricciones de reserva
+
+- Los admins pueden reservar cualquier día: **fines de semana y festivos incluidos**
+- Los admins no tienen límite de 2 reservas simultáneas
+- Los admins no tienen restricción de slots consecutivos por estudio
+- `CalendarScreen`: fines de semana y festivos clicables solo para admins (mantienen color rojo informativo)
+- `studios.js`: generación automática de slots en cualquier día para admins
+- `bookings.js`: todas las validaciones de límite/día omitidas para rol `admin`
+
+### 📅 Lógica PME+ING por curso académico (corte 20 septiembre)
+
+- Reemplaza el cálculo anterior basado en años desde `created_at`
+- Nueva columna `category_start_date` en tabla `users`:
+  - Se asigna al registrar el usuario (desde `created_at`)
+  - Se actualiza automáticamente al **cambiar de categoría** (trigger)
+  - Con esto se puede calcular en qué curso académico está cada alumno PME+ING
+- **Cursos 1 y 2** desde `category_start_date`: acceso a estudios **PME**
+- **Curso 3+**: acceso a estudios **ING**
+- Corte académico: **20 de septiembre** (si se inscribió antes del 20/09 de ese año, el año académico empieza el año anterior)
+- `fin_acceso` también recalculado con el mismo corte
+
+### ✏️ Iniciales: hasta 4 caracteres, formato libre
+
+- Campo `initials` ampliado de `VARCHAR(3)` a `VARCHAR(4)` en base de datos
+- Eliminado constraint de formato rígido (`users_initials_format_check`)
+- Reglas: **no vacías**, máximo 4 caracteres, **únicas** (constraint de unicidad se mantiene)
+- Ejemplos válidos: `AAA`, `IA2`, `JMVC`, `AB`
+- Validación en `admin.js` (backend) y en `AdminScreen.js` (frontend)
+
+### 🔴 Mensaje de error claro para iniciales duplicadas
+
+- Modal de creación/edición de alumno muestra un cuadro de error rojo inline
+- Ya no usa solo `Alert.alert` (no visible en web)
+- Mensajes específicos:
+  - `"Ya existe un usuario con esas iniciales. Usa una combinación distinta."`
+  - Validaciones de campo vacío y longitud también muestran error inline
+- Estado `formError` se limpia al abrir el modal
+
+### 🎯 Estudio C: solo PME
+
+- Estudio C (id=4) actualizado: `categories = 'PME'`
+- Eliminado acceso `EST-SUP` de ese estudio
+- Cambio aplicado directamente en base de datos de producción
+
+### 🔧 Migraciones de base de datos aplicadas
+
+- `category_start_date DATE` añadida a tabla `users` (si no existía)
+- `initials` ampliado a `VARCHAR(4)` (si era 3)
+- Constraint `users_initials_format_check` eliminado (si existía)
+- Trigger de usuarios actualizado: gestiona `category_start_date` en INSERT y UPDATE
+- Función `calcular_fin_acceso` actualizada con corte por año académico
+- Backfill: `category_start_date` asignado desde `created_at` para usuarios existentes
+- `fin_acceso` recalculado para todos los usuarios no-admin
+
+### 🚑 Recuperación de código tras incidente de despliegue
+
+- Repositorio restaurado desde GitHub (`70653be`, v1.0.5)
+- `backend/.env` reconstruido con credenciales reales
+- `node_modules` reinstalados (backend y frontend)
+- PM2 reiniciado con `--update-env`
+- Cambios post-1.0.5 re-aplicados manualmente desde historial de sesión
+
+### 📦 Despliegue
+
+- Bundle generado: `AppEntry-e48e34e6bb9cb6967b61ad779928c943.js`
+- Desplegado en https://reservas.millenia.es
+
+---
+
 ## [Actualización 5 Marzo 2026 (v1.0.5)]
 
 ### 🎨 Mejoras UI/UX en Gestión de Alumnos

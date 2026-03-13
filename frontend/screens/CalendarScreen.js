@@ -95,21 +95,21 @@ export default function CalendarScreen({ route }) {
       const dateString = date.toISOString().split('T')[0];
       const dayOfWeek = date.getDay();
       
-      // Marcar fines de semana en rojo
+      // Marcar fines de semana en rojo y deshabilitarlos solo para no-admin
       if (dayOfWeek === 0 || dayOfWeek === 6) {
         marked[dateString] = {
-          disabled: true,
-          disableTouchEvent: true,
+          disabled: !isAdmin,
+          disableTouchEvent: !isAdmin,
           textColor: '#ff0000',
           dotColor: '#ff0000',
         };
       }
       
-      // Marcar festivos en rojo
+      // Marcar festivos en rojo y deshabilitarlos solo para no-admin
       if (holidays.includes(dateString)) {
         marked[dateString] = {
-          disabled: true,
-          disableTouchEvent: true,
+          disabled: !isAdmin,
+          disableTouchEvent: !isAdmin,
           textColor: '#ff0000',
           dotColor: '#ff0000',
         };
@@ -120,7 +120,7 @@ export default function CalendarScreen({ route }) {
     if (selectedDate) {
       const selectedDay = new Date(selectedDate).getDay();
       const isHoliday = holidays.includes(selectedDate);
-      if (selectedDay !== 0 && selectedDay !== 6 && !isHoliday) {
+      if (isAdmin || (selectedDay !== 0 && selectedDay !== 6 && !isHoliday)) {
         marked[selectedDate] = {
           ...marked[selectedDate],
           selected: true,
@@ -130,7 +130,7 @@ export default function CalendarScreen({ route }) {
     }
     
     setMarkedDates(marked);
-  }, [selectedDate, holidays]);
+  }, [selectedDate, holidays, isAdmin]);
 
   const fetchTimeSlots = async (date) => {
     try {
@@ -252,7 +252,8 @@ export default function CalendarScreen({ route }) {
           current={selectedDate}
           onDayPress={(day) => {
             const dayOfWeek = new Date(day.dateString).getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            const isHoliday = holidays.includes(day.dateString);
+            if (isAdmin || (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday)) {
               setSelectedDate(day.dateString);
             }
           }}

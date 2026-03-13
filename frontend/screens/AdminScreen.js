@@ -43,6 +43,7 @@ export default function AdminScreen() {
   const [bookingHistory, setBookingHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -115,6 +116,7 @@ export default function AdminScreen() {
 
   const handleAddUser = () => {
     setEditingUser(null);
+    setFormError('');
     setFormData({
       name: '',
       email: '',
@@ -130,6 +132,7 @@ export default function AdminScreen() {
 
   const handleEditUser = (user) => {
     setEditingUser(user);
+    setFormError('');
     setFormData({
       name: user.name,
       email: user.email,
@@ -145,17 +148,28 @@ export default function AdminScreen() {
 
   const handleSaveUser = async () => {
     try {
+      setFormError('');
       if (!formData.name || !formData.email || !formData.category || !formData.initials) {
-        Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
+        setFormError('Por favor completa todos los campos obligatorios');
+        return;
+      }
+
+      const normalizedInitials = formData.initials.trim().toUpperCase();
+      if (!normalizedInitials) {
+        setFormError('Las iniciales son obligatorias');
+        return;
+      }
+      if (normalizedInitials.length > 4) {
+        setFormError('Las iniciales no pueden superar 4 caracteres');
         return;
       }
 
       if (!editingUser && !formData.password) {
-        Alert.alert('Error', 'La contraseña es obligatoria para nuevos usuarios');
+        setFormError('La contraseña es obligatoria para nuevos usuarios');
         return;
       }
 
-      const dataToSend = { ...formData };
+      const dataToSend = { ...formData, initials: normalizedInitials };
       
       // Si es edición y no hay contraseña, no la enviamos
       if (editingUser && !formData.password) {
@@ -174,7 +188,13 @@ export default function AdminScreen() {
       fetchUsers();
     } catch (error) {
       console.error('Error saving user:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Error al guardar usuario');
+      const apiError = error.response?.data?.error || 'Error al guardar usuario';
+      const normalizedError = apiError.toLowerCase();
+      if (normalizedError.includes('iniciales') && (normalizedError.includes('uso') || normalizedError.includes('existe') || normalizedError.includes('duplicate'))) {
+        setFormError('Ya existe un usuario con esas iniciales. Usa una combinación distinta.');
+      } else {
+        setFormError(apiError);
+      }
     }
   };
 
@@ -387,6 +407,12 @@ export default function AdminScreen() {
                 {editingUser ? 'Editar Alumno' : 'Nuevo Alumno'}
               </Text>
 
+              {!!formError && (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              )}
+
               <TextInput
                 style={styles.input}
                 placeholder="Nombre completo (incluir ambos apellidos) *"
@@ -421,10 +447,10 @@ export default function AdminScreen() {
 
               <TextInput
                 style={styles.input}
-                placeholder="Iniciales (3 letras) *"
+                placeholder="Iniciales (hasta 4 caracteres) *"
                 value={formData.initials}
                 onChangeText={(text) => setFormData({ ...formData, initials: text.toUpperCase() })}
-                maxLength={3}
+                maxLength={4}
                 autoCapitalize="characters"
               />
 
@@ -870,6 +896,20 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+  },
+  errorBox: {
+    backgroundColor: '#FFEBEE',
+    borderWidth: 1,
+    borderColor: '#D32F2F',
+    borderRadius: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#B71C1C',
+    fontSize: 13,
+    fontWeight: '600',
   },
   label: {
     fontSize: 14,

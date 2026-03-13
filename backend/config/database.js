@@ -21,8 +21,9 @@ async function initializeDatabase() {
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         category VARCHAR(20) NOT NULL CHECK (category IN ('PME', 'EST-SUP', 'ING', 'PME+ING')),
-        initials VARCHAR(3) UNIQUE NOT NULL,
+        initials VARCHAR(4) UNIQUE NOT NULL,
         role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+        category_start_date DATE,
         fin_acceso DATE,
         activo BOOLEAN DEFAULT true,
         must_change_password BOOLEAN DEFAULT false,
@@ -31,7 +32,7 @@ async function initializeDatabase() {
       )
     `);
 
-    // Agregar columnas fin_acceso, activo, role, must_change_password y token_version si no existen (para DBs existentes)
+    // Agregar columnas necesarias para DBs existentes
     await pool.query(`
       DO $$
       BEGIN
@@ -50,18 +51,55 @@ async function initializeDatabase() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='token_version') THEN
           ALTER TABLE users ADD COLUMN token_version INTEGER DEFAULT 1;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='category_start_date') THEN
+          ALTER TABLE users ADD COLUMN category_start_date DATE;
+        END IF;
+      END $$;
+    `);
+
+    // Ampliar initials a 4 y eliminar constraint de formato rígido si existe
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'users'
+            AND column_name = 'initials'
+            AND character_maximum_length = 3
+        ) THEN
+          ALTER TABLE users
+          ALTER COLUMN initials TYPE VARCHAR(4);
+        END IF;
+
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.table_constraints
+          WHERE table_name = 'users'
+            AND constraint_name = 'users_initials_format_check'
+            AND constraint_type = 'CHECK'
+        ) THEN
+          ALTER TABLE users DROP CONSTRAINT users_initials_format_check;
+        END IF;
       END $$;
     `);
 
     // Crear o reemplazar función para calcular fin_acceso
     await pool.query(`
-      CREATE OR REPLACE FUNCTION calcular_fin_acceso(p_category VARCHAR, p_created_at TIMESTAMP)
+      CREATE OR REPLACE FUNCTION calcular_fin_acceso(p_category VARCHAR, p_start_date TIMESTAMP)
       RETURNS DATE AS $$
       DECLARE
-        anio_registro INTEGER;
+        anio_inicio_academico INTEGER;
         duracion INTEGER;
+        fecha_corte DATE;
       BEGIN
-        anio_registro := EXTRACT(YEAR FROM p_created_at);
+        -- Año académico con corte en 20 de septiembre
+        fecha_corte := MAKE_DATE(EXTRACT(YEAR FROM p_start_date)::INTEGER, 9, 20);
+        IF p_start_date::DATE >= fecha_corte THEN
+          anio_inicio_academico := EXTRACT(YEAR FROM p_start_date)::INTEGER;
+        ELSE
+          anio_inicio_academico := EXTRACT(YEAR FROM p_start_date)::INTEGER - 1;
+        END IF;
         
         CASE p_category
           WHEN 'PME' THEN duracion := 2;
@@ -71,21 +109,35 @@ async function initializeDatabase() {
           ELSE duracion := 1;
         END CASE;
         
-        RETURN MAKE_DATE(anio_registro + duracion, 7, 30);
+        RETURN MAKE_DATE(anio_inicio_academico + duracion, 9, 20);
       END;
       $$ LANGUAGE plpgsql;
     `);
 
-    // Crear o reemplazar trigger para calcular fin_acceso automáticamente
+    // Trigger: administra category_start_date y recalcula fin_acceso
     await pool.query(`
       CREATE OR REPLACE FUNCTION trigger_calcular_fin_acceso()
       RETURNS TRIGGER AS $$
       BEGIN
         IF NEW.role = 'admin' THEN
+          NEW.category_start_date := NULL;
           NEW.fin_acceso := NULL;
-        ELSIF NEW.fin_acceso IS NULL THEN
-          NEW.fin_acceso := calcular_fin_acceso(NEW.category, NEW.created_at);
+          RETURN NEW;
         END IF;
+
+        IF TG_OP = 'UPDATE' AND NEW.category IS DISTINCT FROM OLD.category THEN
+          NEW.category_start_date := CURRENT_DATE;
+        END IF;
+
+        IF NEW.category_start_date IS NULL THEN
+          IF TG_OP = 'INSERT' THEN
+            NEW.category_start_date := COALESCE(NEW.created_at::DATE, CURRENT_DATE);
+          ELSE
+            NEW.category_start_date := COALESCE(OLD.category_start_date, CURRENT_DATE);
+          END IF;
+        END IF;
+
+        NEW.fin_acceso := calcular_fin_acceso(NEW.category, NEW.category_start_date::timestamp);
         RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;
@@ -93,14 +145,31 @@ async function initializeDatabase() {
 
     await pool.query(`
       DROP TRIGGER IF EXISTS before_insert_user_fin_acceso ON users;
-      CREATE TRIGGER before_insert_user_fin_acceso
-      BEFORE INSERT ON users
+      DROP TRIGGER IF EXISTS before_upsert_user_fin_acceso ON users;
+      CREATE TRIGGER before_upsert_user_fin_acceso
+      BEFORE INSERT OR UPDATE OF category, role, category_start_date ON users
       FOR EACH ROW
       EXECUTE FUNCTION trigger_calcular_fin_acceso();
     `);
 
+    // Backfill inicial de category_start_date y recalculo de fin_acceso
     await pool.query(`
-      UPDATE users SET fin_acceso = NULL WHERE role = 'admin';
+      UPDATE users
+      SET category_start_date = COALESCE(category_start_date, created_at::DATE)
+      WHERE role <> 'admin';
+    `);
+
+    await pool.query(`
+      UPDATE users
+      SET category_start_date = NULL,
+          fin_acceso = NULL
+      WHERE role = 'admin';
+    `);
+
+    await pool.query(`
+      UPDATE users
+      SET fin_acceso = calcular_fin_acceso(category, category_start_date::timestamp)
+      WHERE role <> 'admin';
     `);
 
     // Create studios table

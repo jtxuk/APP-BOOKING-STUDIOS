@@ -12,7 +12,7 @@ router.use(verifyAdmin);
 router.get('/users', async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, name, phone, email, category, initials, role, fin_acceso, activo, created_at FROM users ORDER BY id'
+      'SELECT id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users ORDER BY id'
     );
     res.json(result.rows);
   } catch (error) {
@@ -26,7 +26,7 @@ router.get('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(
-      'SELECT id, name, phone, email, category, initials, role, fin_acceso, activo, created_at FROM users WHERE id = $1',
+      'SELECT id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users WHERE id = $1',
       [id]
     );
     
@@ -62,13 +62,21 @@ router.post('/users', async (req, res) => {
       return res.status(400).json({ error: 'Role inválido. Debe ser: admin o user' });
     }
     
+    const normalizedInitials = String(initials || '').trim().toUpperCase();
+    if (!normalizedInitials) {
+      return res.status(400).json({ error: 'Las iniciales son obligatorias' });
+    }
+    if (normalizedInitials.length > 4) {
+      return res.status(400).json({ error: 'Las iniciales no pueden superar 4 caracteres' });
+    }
+
     // Hash de la contraseña
     const password_hash = await bcrypt.hash(password, 10);
     
     // Insertar usuario (fin_acceso se calcula automáticamente por trigger)
     const result = await db.query(
-      'INSERT INTO users (name, phone, email, password_hash, category, initials, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, phone, email, category, initials, role, fin_acceso, activo, created_at',
-      [name, phone, email, password_hash, category, initials, role]
+      'INSERT INTO users (name, phone, email, password_hash, category, initials, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at',
+      [name, phone, email, password_hash, category, normalizedInitials, role]
     );
     
     res.status(201).json(result.rows[0]);
@@ -125,8 +133,15 @@ router.put('/users/:id', async (req, res) => {
       values.push(category);
     }
     if (initials !== undefined) {
+      const normalizedInitials = String(initials || '').trim().toUpperCase();
+      if (!normalizedInitials) {
+        return res.status(400).json({ error: 'Las iniciales son obligatorias' });
+      }
+      if (normalizedInitials.length > 4) {
+        return res.status(400).json({ error: 'Las iniciales no pueden superar 4 caracteres' });
+      }
       updates.push(`initials = $${paramCount++}`);
-      values.push(initials);
+      values.push(normalizedInitials);
     }
     if (role !== undefined) {
       if (role !== 'admin' && role !== 'user') {
@@ -152,7 +167,7 @@ router.put('/users/:id', async (req, res) => {
     }
     
     values.push(id);
-    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, phone, email, category, initials, role, fin_acceso, activo, created_at`;
+    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at`;
     
     const result = await db.query(query, values);
     

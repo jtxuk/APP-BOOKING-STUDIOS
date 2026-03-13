@@ -76,7 +76,7 @@ The server will start on `http://localhost:5000` (dev). In production it runs on
 ## Database Schema
 
 ### Users
-- id, username, email, password_hash, initials, created_at
+- `id`, `name`, `email`, `phone`, `password_hash`, `category` (PME/EST-SUP/ING/PME+ING), `initials` VARCHAR(4), `role` (admin/user), `category_start_date`, `fin_acceso`, `activo`, `must_change_password`, `token_version`, `created_at`
 
 ### Studios
 - id, name, description, created_at

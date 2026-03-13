@@ -31,12 +31,20 @@ async function countUserBookings(userId) {
   return parseInt(result.rows[0].count);
 }
 
+function getAcademicYear(dateValue) {
+  const date = new Date(dateValue);
+  const year = date.getFullYear();
+  const cutoff = new Date(year, 8, 20); // 20 Septiembre
+  return date >= cutoff ? year : year - 1;
+}
+
 // Create a new booking
 router.post('/create', verifyToken, async (req, res) => {
   try {
     const { studioId, timeSlotId, bookingDate } = req.body;
     const userId = req.user.id;
     const userCategory = req.user.category;
+    const isAdmin = req.user.role === 'admin';
 
     if (!studioId || !timeSlotId || !bookingDate) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -72,10 +80,12 @@ router.post('/create', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'No se puede reservar en fechas u horas pasadas' });
     }
 
-    // Validar que no sea sábado o domingo
-    const bookingDay = new Date(`${slotInfo.slot_date}T00:00:00`).getDay();
-    if (bookingDay === 0 || bookingDay === 6) {
-      return res.status(400).json({ error: 'No se pueden hacer reservas los sábados y domingos' });
+    // Restringir fines de semana solo a usuarios no admin
+    if (!isAdmin) {
+      const bookingDay = new Date(`${slotInfo.slot_date}T00:00:00`).getDay();
+      if (bookingDay === 0 || bookingDay === 6) {
+        return res.status(400).json({ error: 'No se pueden hacer reservas los sábados y domingos' });
+      }
     }
 
     // Get studio categories to validate user access
@@ -88,38 +98,41 @@ router.post('/create', verifyToken, async (req, res) => {
 
     const studioCategories = studioResult.rows[0].categories.split(',').map(c => c.trim());
 
-    // Validación de acceso según categoría y tiempo transcurrido
-    let allowedCategories = [userCategory];
-    
-    if (userCategory === 'PME+ING') {
-      // Obtener fecha de creación del usuario
-      const userQuery = await db.query('SELECT created_at FROM users WHERE id = $1', [userId]);
-      const userCreatedAt = new Date(userQuery.rows[0].created_at);
-      const now = new Date();
-      const yearsSinceCreation = (now - userCreatedAt) / (1000 * 60 * 60 * 24 * 365.25);
-      
-      if (yearsSinceCreation < 2) {
-        // Primeros 2 años: acceso a PME
-        allowedCategories = ['PME'];
-      } else {
-        // Año 3: acceso a ING
-        allowedCategories = ['ING'];
+    if (!isAdmin) {
+      // Validación de acceso según categoría y curso académico
+      let allowedCategories = [userCategory];
+
+      if (userCategory === 'PME+ING') {
+        const userQuery = await db.query(
+          'SELECT category_start_date, created_at FROM users WHERE id = $1',
+          [userId]
+        );
+
+        const userRow = userQuery.rows[0];
+        const startDate = userRow.category_start_date || userRow.created_at;
+        const startAcademicYear = getAcademicYear(startDate);
+        const bookingAcademicYear = getAcademicYear(slotInfo.slot_date);
+        const elapsedCourses = bookingAcademicYear - startAcademicYear;
+
+        // Curso 0 y 1 => PME, curso 2+ => ING
+        allowedCategories = elapsedCourses >= 2 ? ['ING'] : ['PME'];
+      }
+
+      const hasAccess = studioCategories.some(cat => allowedCategories.includes(cat));
+      if (!hasAccess) {
+        return res.status(403).json({
+          error: `Tu categoría (${userCategory}) no tiene acceso a este estudio en este momento. Categorías permitidas: ${studioCategories.join(', ')}`
+        });
       }
     }
 
-    // Check if user's category is allowed in this studio
-    const hasAccess = studioCategories.some(cat => allowedCategories.includes(cat));
-    
-    if (!hasAccess) {
-      return res.status(403).json({ 
-        error: `Tu categoría (${userCategory}) no tiene acceso a este estudio en este momento. Categorías permitidas: ${studioCategories.join(', ')}` 
-      });
-    }
-
-    // Check if user already has 2 bookings
-    const bookingCount = await countUserBookings(userId);
-    if (bookingCount >= 2) {
-      return res.status(400).json({ error: 'Máximo 2 reservas permitidas' });
+    // Límites de reservas solo para usuarios no admin
+    let bookingCount = 0;
+    if (!isAdmin) {
+      bookingCount = await countUserBookings(userId);
+      if (bookingCount >= 2) {
+        return res.status(400).json({ error: 'Máximo 2 reservas permitidas' });
+      }
     }
 
     // Check if time slot is already booked
@@ -131,10 +144,12 @@ router.post('/create', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Este horario ya está reservado' });
     }
 
-    // Check for consecutive slots in the same studio
-    const hasConsecutive = await hasConsecutiveSlotsInStudio(userId, studioId);
-    if (hasConsecutive && bookingCount === 1) {
-      return res.status(400).json({ error: 'No se pueden reservar slots consecutivos en el mismo estudio' });
+    // Restricción de slots consecutivos solo para usuarios no admin
+    if (!isAdmin) {
+      const hasConsecutive = await hasConsecutiveSlotsInStudio(userId, studioId);
+      if (hasConsecutive && bookingCount === 1) {
+        return res.status(400).json({ error: 'No se pueden reservar slots consecutivos en el mismo estudio' });
+      }
     }
 
     // Create the booking
