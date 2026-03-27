@@ -135,6 +135,9 @@ No hay contraseñas de prueba publicadas por seguridad.
 1. **Login**: Inicia sesión con email y contraseña
 2. **Explorar Estudios**: Ve los 8 estudios disponibles con sus características
 3. **Reservar Slots**: Selecciona fecha y horario (máximo 2 reservas activas)
+    - Al reservar, aparece un diálogo de confirmación breve con el formato:
+       "<Nombre Estudio>\n<fecha larga>\n<horario>\n¿Confirmar?"
+    - En móvil, el layout es compacto: calendario y los 4 slots caben en pantalla sin scroll.
 4. **Mis Reservas**: Ve y cancela tus reservas activas
 5. **Perfil**: Ve tu información y cierra sesión
 

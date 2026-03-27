@@ -169,6 +169,9 @@ npm run web    # Web
 1. **Login**: Acceso restringido con email y contraseña
 2. **Estudios**: Lista de 8 estudios disponibles
 3. **Calendario**: Calendario en español con selección de fecha y horarios
+     - Al reservar un slot, se muestra un diálogo de confirmación con el formato:
+         "<Nombre Estudio>\n<fecha larga>\n<horario>\n¿Confirmar?"
+     - En móvil, el layout es compacto: calendario y los 4 slots caben en pantalla sin scroll.
 4. **Mis Reservas**: Visualización y cancelación de reservas
 5. **Perfil**: Información del usuario, cambio de contraseña y cierre de sesión
 6. **Gestión de Alumnos** (admin): Panel completo de administración con categorías colapsables

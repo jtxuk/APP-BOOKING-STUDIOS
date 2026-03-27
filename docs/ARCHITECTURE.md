@@ -102,7 +102,15 @@
          │
          ├─ ¿Slot disponible? ──NO──> Mostrar error
          │
-         └─ SÍ ──> Validaciones en Backend:
+         └─ SÍ ──> Mostrar diálogo de confirmación:
+                   ├─ Formato: "<Nombre Estudio>\n<fecha larga>\n<horario>\n¿Confirmar?"
+                   ├─ Usuario acepta → POST /api/bookings/create
+                   ├─ Usuario cancela → No se realiza reserva
+                   │
+                   └─ Layout compacto en móvil: calendario y los 4 slots caben en pantalla sin scroll
+                      (header, calendario, slots, footer)
+         
+         └─ Validaciones en Backend:
                    ├─ ¿Máx 2 reservas activas? ──NO──> Error
                    ├─ ¿No consecutivo en mismo studio? ──NO──> Error
                    ├─ ¿Slot no ocupado? ──NO──> Error

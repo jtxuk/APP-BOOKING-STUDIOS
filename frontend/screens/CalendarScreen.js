@@ -31,6 +31,7 @@ LocaleConfig.defaultLocale = 'es';
 
 export default function CalendarScreen({ route }) {
   const { studio } = route.params;
+  const isCompactLayout = Platform.OS !== 'web';
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -208,22 +209,38 @@ export default function CalendarScreen({ route }) {
       return;
     }
 
-    setBooking(true);
-    try {
-      await bookingAPI.createBooking(studio.id, slot.id, selectedDate);
-      showAlert('Éxito', 'Reserva realizada correctamente');
-      fetchTimeSlots(selectedDate);
-    } catch (error) {
-      showAlert('Error', error.response?.data?.error || 'Error al realizar la reserva');
-    } finally {
-      setBooking(false);
-    }
+    const formattedDate = new Date(selectedDate).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const confirmMessage =
+      `${studio.name}\n` +
+      `${formattedDate}\n` +
+      `${slot.start_time} - ${slot.end_time}\n\n` +
+      '¿Confirmar?';
+
+    showConfirm('Confirmar reserva', confirmMessage, async () => {
+      setBooking(true);
+      try {
+        await bookingAPI.createBooking(studio.id, slot.id, selectedDate);
+        showAlert('Éxito', 'Reserva realizada correctamente');
+        fetchTimeSlots(selectedDate);
+      } catch (error) {
+        showAlert('Error', error.response?.data?.error || 'Error al realizar la reserva');
+      } finally {
+        setBooking(false);
+      }
+    });
   };
 
   const renderSlot = ({ item }) => (
     <TouchableOpacity
       style={[
         styles.slotCard,
+        isCompactLayout && styles.slotCardCompact,
         item.status === 'booked' && styles.slotBooked,
         item.status === 'blocked' && styles.slotBlocked,
       ]}
@@ -247,7 +264,7 @@ export default function CalendarScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.calendarContainer}>
+      <View style={[styles.calendarContainer, isCompactLayout && styles.calendarContainerCompact]}>
         <Calendar
           current={selectedDate}
           onDayPress={(day) => {
@@ -260,6 +277,8 @@ export default function CalendarScreen({ route }) {
           markedDates={markedDates}
           minDate={new Date().toISOString().split('T')[0]}
           firstDay={1}
+          hideExtraDays
+          showSixWeeks={false}
           monthFormat={'MMMM yyyy'}
           theme={{
             selectedDayBackgroundColor: '#0E6BA8',
@@ -267,20 +286,20 @@ export default function CalendarScreen({ route }) {
             todayTextColor: '#0E6BA8',
             arrowColor: '#0E6BA8',
             textDisabledColor: '#ff0000',
-            textDayFontSize: 13,
-            textMonthFontSize: 15,
+            textDayFontSize: isCompactLayout ? 12 : 13,
+            textMonthFontSize: isCompactLayout ? 14 : 15,
             'stylesheet.calendar.header': {
               header: {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                paddingLeft: 10,
-                paddingRight: 10,
-                marginTop: 6,
+                paddingLeft: isCompactLayout ? 8 : 10,
+                paddingRight: isCompactLayout ? 8 : 10,
+                marginTop: isCompactLayout ? 2 : 6,
                 alignItems: 'center',
-                paddingBottom: 5,
+                paddingBottom: isCompactLayout ? 2 : 5,
               },
               monthText: {
-                fontSize: 15,
+                fontSize: isCompactLayout ? 14 : 15,
                 fontWeight: 'bold',
                 paddingTop: 0,
                 paddingBottom: 0,
@@ -290,29 +309,29 @@ export default function CalendarScreen({ route }) {
             },
             'stylesheet.day.basic': {
               base: {
-                width: 32,
-                height: 32,
+                width: isCompactLayout ? 28 : 32,
+                height: isCompactLayout ? 28 : 32,
                 alignItems: 'center',
                 justifyContent: 'center',
               },
               text: {
                 marginTop: 0,
-                fontSize: 13,
+                fontSize: isCompactLayout ? 12 : 13,
                 fontWeight: '300',
                 color: '#2d4150',
               },
             },
           }}
-          style={{
-            paddingTop: 0,
-            paddingBottom: 5,
-          }}
+          style={[
+            styles.calendar,
+            isCompactLayout && styles.calendarCompact,
+          ]}
         />
       </View>
 
-      <View style={styles.slotsContainer}>
-        <Text style={styles.studioTitle}>{studio.name}</Text>
-        <Text style={styles.dateText}>
+      <View style={[styles.slotsContainer, isCompactLayout && styles.slotsContainerCompact]}>
+        <Text style={[styles.studioTitle, isCompactLayout && styles.studioTitleCompact]}>{studio.name}</Text>
+        <Text style={[styles.dateText, isCompactLayout && styles.dateTextCompact]}>
           {new Date(selectedDate).toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
@@ -330,7 +349,7 @@ export default function CalendarScreen({ route }) {
             data={timeSlots}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderSlot}
-            scrollEnabled={true}
+            scrollEnabled={!isCompactLayout}
           />
         )}
       </View>
@@ -341,18 +360,36 @@ export default function CalendarScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',    alignSelf: 'center',
+    backgroundColor: '#f5f5f5',
+    alignSelf: 'center',
     width: '100%',
-    maxWidth: 800,  },
+    maxWidth: 800,
+  },
   calendarContainer: {
     backgroundColor: '#fff',
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  calendarContainerCompact: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  calendar: {
+    paddingTop: 0,
+    paddingBottom: 5,
+  },
+  calendarCompact: {
+    paddingBottom: 2,
+  },
   slotsContainer: {
     flex: 1,
     padding: 8,
+  },
+  slotsContainerCompact: {
+    paddingTop: 4,
+    paddingHorizontal: 6,
+    paddingBottom: 6,
   },
   studioTitle: {
     fontSize: 18,
@@ -360,11 +397,19 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 3,
   },
+  studioTitleCompact: {
+    fontSize: 16,
+    marginBottom: 1,
+  },
   dateText: {
     fontSize: 13,
     color: '#666',
     marginBottom: 10,
     textTransform: 'capitalize',
+  },
+  dateTextCompact: {
+    fontSize: 12,
+    marginBottom: 6,
   },
   centerContainer: {
     flex: 1,
@@ -378,6 +423,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderLeftWidth: 4,
     borderLeftColor: '#4CAF50',
+  },
+  slotCardCompact: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    marginBottom: 4,
   },
   slotBooked: {
     borderLeftColor: '#f44336',
