@@ -2,10 +2,6 @@
 -- Seed para reconstruir catalogos y usuarios actuales.
 -- Reservas y slots se dejan vacios intencionalmente.
 --
--- Passwords seed:
--- - sara@millenia.es => s12345
--- - iñaki@millenia.es => i12345
--- - resto de usuarios => 123456
 
 -- SEGURIDAD: este script NO se ejecuta si no activas explicitamente la bandera.
 -- Para permitir ejecucion destructiva, descomenta esta linea:

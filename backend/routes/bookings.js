@@ -71,13 +71,13 @@ router.post('/create', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'El slot no corresponde con la fecha seleccionada' });
     }
 
-    // Validar que no sea fecha/hora pasada (incluye slots de hoy con inicio ya pasado)
+    // Validar que no sea fecha/hora pasada (se permite hasta 30 min después del inicio del slot)
     const pastCheckQuery = `
-      SELECT (($1::date + $2::time) > CURRENT_TIMESTAMP) AS can_book
+      SELECT (($1::date + $2::time)::timestamp + INTERVAL '30 minutes' > CURRENT_TIMESTAMP) AS can_book
     `;
     const pastCheckResult = await db.query(pastCheckQuery, [slotInfo.slot_date, slotInfo.start_time]);
     if (!pastCheckResult.rows[0].can_book) {
-      return res.status(400).json({ error: 'No se puede reservar en fechas u horas pasadas' });
+      return res.status(400).json({ error: 'No se puede reservar este slot, ya han pasado más de 30 minutos desde su inicio' });
     }
 
     // Restringir fines de semana solo a usuarios no admin
@@ -142,6 +142,24 @@ router.post('/create', verifyToken, async (req, res) => {
     );
     if (slotCheck.rows.length > 0) {
       return res.status(400).json({ error: 'Este horario ya está reservado' });
+    }
+
+    // Verificar que el usuario no tenga ya una reserva en el mismo horario (cualquier estudio)
+    if (!isAdmin) {
+      const conflictQuery = `
+        SELECT b.id
+        FROM bookings b
+        JOIN time_slots ts ON b.time_slot_id = ts.id
+        WHERE b.user_id = $1
+        AND b.status = 'confirmed'
+        AND ts.slot_date = $2
+        AND ts.start_time = $3
+        AND ts.end_time = $4
+      `;
+      const conflictResult = await db.query(conflictQuery, [userId, slotInfo.slot_date, slotInfo.start_time, slotInfo.end_time]);
+      if (conflictResult.rows.length > 0) {
+        return res.status(400).json({ error: 'Ya tienes una reserva en ese mismo horario en otro estudio' });
+      }
     }
 
     // Restricción de slots consecutivos solo para usuarios no admin
@@ -228,10 +246,10 @@ router.delete('/:bookingId', verifyToken, async (req, res) => {
     const slotStart = new Date(`${booking.slot_date} ${booking.start_time}`);
     const minutesUntilStart = (slotStart - new Date()) / 60000;
 
-    // Check if cancellation deadline has passed (less than 15 minutes until start)
-    if (minutesUntilStart < 15) {
+    // Check if cancellation deadline has passed (less than 6 horas until start)
+    if (minutesUntilStart < 360) {
       return res.status(400).json({ 
-        error: 'No se puede cancelar con menos de 15 minutos antes del inicio de la reserva' 
+        error: 'No se puede cancelar con menos de 6 horas antes del inicio de la reserva' 
       });
     }
 
