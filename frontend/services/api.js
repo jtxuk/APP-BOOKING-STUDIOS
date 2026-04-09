@@ -2,6 +2,33 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import storage from '../utils/storage';
 
+let sessionExpiredHandler = null;
+let sessionExpiredNotified = false;
+
+export const setSessionExpiredHandler = (handler) => {
+  sessionExpiredHandler = handler;
+  sessionExpiredNotified = false;
+};
+
+const notifySessionExpired = async (error) => {
+  if (sessionExpiredNotified) {
+    return;
+  }
+
+  sessionExpiredNotified = true;
+
+  try {
+    await storage.removeItem('userToken');
+    await storage.removeItem('user');
+  } catch (storageError) {
+    console.log('Error limpiando sesión local:', storageError);
+  }
+
+  if (typeof sessionExpiredHandler === 'function') {
+    sessionExpiredHandler(error);
+  }
+};
+
 // En producción usa /api (ruta local a través de Apache)
 // En desarrollo usa localhost:5000
 const API_URL = typeof window !== 'undefined' && window.location.hostname === 'reservas.millenia.es'
@@ -39,7 +66,7 @@ api.interceptors.response.use(
     console.log('✅ Respuesta exitosa:', response.status, response.config.url);
     return response;
   },
-  (error) => {
+  async (error) => {
     console.error('❌ Error en respuesta:', {
       status: error.response?.status,
       statusText: error.response?.statusText,
@@ -48,6 +75,15 @@ api.interceptors.response.use(
       code: error.code,
       url: error.config?.url
     });
+
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const isLoginRequest = requestUrl.includes('/auth/login');
+
+    if (status === 401 && !isLoginRequest) {
+      await notifySessionExpired(error);
+    }
+
     return Promise.reject(error);
   }
 );

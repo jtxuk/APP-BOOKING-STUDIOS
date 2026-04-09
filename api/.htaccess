@@ -17,3 +17,11 @@
   # Todo lo demás va a index.php
   RewriteRule ^ index.php [QSA,L]
 </IfModule>
+
+<IfModule mod_headers.c>
+  # No cache for API responses in this project only.
+  Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, private"
+  Header always set Pragma "no-cache"
+  Header always set Expires "0"
+  Header always set Surrogate-Control "no-store"
+</IfModule>

@@ -65,8 +65,8 @@ app-reservas/
 
 **Frontend**:
 - **Editar**: `frontend/` (código fuente React Native)
-- **Compilar**: `cd frontend && npx expo export --platform web`
-- **Deploy**: Copiar `frontend/dist/*` a `_expo/`
+- **Compilar + Deploy (recomendado)**: `./frontend/deploy_web_atomic.sh`
+- **Deploy manual**: Solo en caso excepcional, copiando `frontend/dist/` completo
 - **Git**: Solo `frontend/` está versionado, `_expo/` solo existe en servidor
 
 **Backend**:
@@ -108,7 +108,25 @@ npm run build  # Si es necesario recompilar
 # Reiniciar backend si es necesario
 ```
 
-## Cambios Recientes (v1.0.5 - 5 Marzo 2026)
+## Cambios Recientes (v1.0.7 - 9 Abril 2026)
+
+### 🛡️ Estabilidad de sesión y caché
+- ✅ **API sin caché**: Cabeceras `no-store/no-cache` en backend + proxy PHP + `.htaccess` del API
+- ✅ **Logout automático por sesión expirada**: Si hay `401`, la app limpia sesión y vuelve a login
+- ✅ **Revalidación al volver de segundo plano**: Web (`visibilitychange`) y móvil (`AppState`)
+- ✅ **Recuperación de pantallas críticas**: Calendario y Mis Reservas recargan al foco y muestran botón Reintentar
+- ✅ **Cambio de rol seguro**: Si un admin cambia un usuario de `admin` a `user` (o al revés), sus tokens anteriores quedan invalidados
+
+### 📍 Alcance seguro
+- ✅ Cambios aplicados solo en `app-reservas`
+- ✅ No afecta otras apps de `/www` (incluido WordPress)
+
+### 🧱 Nuevo proceso anti-cortes de VS Code
+- ✅ Script atómico de despliegue frontend: `frontend/deploy_web_atomic.sh`
+- ✅ Evita inconsistencias de hash (`index.html` vs `AppEntry-*.js`)
+- ✅ Log de ejecución: `frontend/deploy_web_atomic.log`
+
+## Cambios anteriores (v1.0.5 - 5 Marzo 2026)
 
 ### 🎨 Mejoras UI/UX
 - ✅ **Select dropdown para ordenación**: Reemplazado badges por dropdown con "Fecha" por defecto
@@ -137,4 +155,4 @@ npm run build  # Si es necesario recompilar
 ---
 
 **Entorno**: Producción  
-**Última actualización**: 5 Marzo 2026
+**Última actualización**: 9 Abril 2026

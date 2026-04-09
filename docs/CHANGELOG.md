@@ -3,6 +3,62 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 9 Abril 2026 (v1.0.7)]
+
+### 🛡️ Política anti-caché para API de reservas
+
+- Se añadieron cabeceras anti-caché en **toda la API** para evitar datos obsoletos en navegador/proxy:
+  - `Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private`
+  - `Pragma: no-cache`
+  - `Expires: 0`
+  - `Surrogate-Control: no-store`
+- Implementado en:
+  - `backend/server.js` (middleware global para `/api`)
+  - `api/index.php` (respuesta del proxy y preflight `OPTIONS`)
+  - `api/.htaccess` (headers a nivel Apache en la carpeta API del proyecto)
+- Alcance del cambio: **solo** `app-reservas` (no afecta otras apps en `/www`, como WordPress).
+
+### 🔐 Recuperación automática de sesión tras inactividad
+
+- Interceptor global en frontend para detectar `401` en requests autenticadas.
+- Si la sesión expira:
+  - Se limpia almacenamiento local (`userToken` y `user`)
+  - Se fuerza retorno a pantalla de login automáticamente
+  - Se muestra aviso informativo al usuario
+- Se evita disparar múltiples avisos simultáneos para una misma expiración.
+
+### ♻️ Revalidación al volver de segundo plano
+
+- Al volver a foreground:
+  - Web: `visibilitychange`
+  - App nativa: `AppState` -> `active`
+- Se ejecuta validación de sesión (`/api/users/profile`) para detectar tokens caducados sin dejar la UI bloqueada.
+
+### 🧭 Pantallas reforzadas para evitar estado "colgado"
+
+- `CalendarScreen` y `MyBookingsScreen` ahora:
+  - Recargan al recuperar foco
+  - Muestran mensaje de error con botón **Reintentar** cuando falla la carga
+- Objetivo: reducir casos en los que el usuario debía cerrar sesión manualmente para recuperar funcionamiento.
+
+### 👮 Invalidación de sesión al cambiar rol
+
+- Si un admin cambia el `role` de un usuario (`admin` <-> `user`), el backend incrementa `token_version` automáticamente.
+- Esto invalida cualquier JWT emitido antes del cambio de rol.
+- Resultado: el usuario debe volver a iniciar sesión y ya no conserva privilegios antiguos por una sesión previa.
+- Implementado en: `backend/routes/admin.js`
+
+### 🚀 Deploy frontend atómico (anti pantalla blanca)
+
+- Nuevo script: `frontend/deploy_web_atomic.sh`
+- Diseñado para evitar despliegues inconsistentes cuando se interrumpe la compilación (ej. reinicio de VS Code)
+- Flujo del script:
+  - Compila con `expo export --platform web --output-dir dist`
+  - Valida `dist/index.html` y `dist/_expo/static/js/web/AppEntry-*.js`
+  - Reemplaza de forma atómica `_expo`, `index.html` y `metadata.json`
+  - Comprueba sincronización de hash entre `index.html` y bundle real
+- Log operativo: `frontend/deploy_web_atomic.log`
+
 ## [Actualización 13 Marzo 2026 (v1.0.6)]
 
 ### 🔓 Administradores sin restricciones de reserva

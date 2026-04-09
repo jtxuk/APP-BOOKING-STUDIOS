@@ -17,6 +17,7 @@ import { GlobalStyles } from '../constants/GlobalStyles';
 export default function MyBookingsScreen() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -27,10 +28,12 @@ export default function MyBookingsScreen() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
+      setErrorMessage('');
       const response = await bookingAPI.getMyBookings();
       setBookings(response.data);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar las reservas');
+      setBookings([]);
+      setErrorMessage('No se pudieron cargar las reservas. Pulsa Reintentar.');
     } finally {
       setLoading(false);
     }
@@ -98,7 +101,14 @@ export default function MyBookingsScreen() {
 
   return (
     <View style={styles.container}>
-      {bookings.length === 0 ? (
+      {errorMessage ? (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchBookings}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : bookings.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text style={styles.emptyText}>No tienes reservas</Text>
         </View>
@@ -161,5 +171,22 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: Colors.textTertiary,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+    maxWidth: 320,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: Colors.textWhite,
+    fontWeight: '600',
   },
 });

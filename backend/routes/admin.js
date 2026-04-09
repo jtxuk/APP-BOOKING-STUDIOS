@@ -106,6 +106,18 @@ router.put('/users/:id', async (req, res) => {
     const { id } = req.params;
     const { name, phone, email, category, initials, role, fin_acceso, activo } = req.body;
     const shouldNullAccessDate = role === 'admin';
+
+    const existingUserResult = await db.query(
+      'SELECT role FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (existingUserResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const existingUser = existingUserResult.rows[0];
+    const roleChanged = role !== undefined && role !== existingUser.role;
     
     // Construir query dinámica solo con campos proporcionados
     const updates = [];
@@ -161,6 +173,9 @@ router.put('/users/:id', async (req, res) => {
       updates.push(`activo = $${paramCount++}`);
       values.push(activo);
     }
+    if (roleChanged) {
+      updates.push('token_version = token_version + 1');
+    }
     
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
@@ -170,10 +185,6 @@ router.put('/users/:id', async (req, res) => {
     const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at`;
     
     const result = await db.query(query, values);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
     
     res.json(result.rows[0]);
   } catch (error) {

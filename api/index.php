@@ -6,6 +6,10 @@ $method = $_SERVER["REQUEST_METHOD"];
 // CORS preflight handling
 if ($method === 'OPTIONS') {
     http_response_code(204);
+    header("Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+    header("Surrogate-Control: no-store");
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -88,6 +92,10 @@ if (function_exists("curl_init")) {
 // Send response
 http_response_code($http_code);
 header("Content-Type: " . ($content_type ?: "application/json"));
+header("Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private");
+header("Pragma: no-cache");
+header("Expires: 0");
+header("Surrogate-Control: no-store");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");

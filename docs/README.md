@@ -67,6 +67,7 @@ booking-app/
 ✅ **Cambio de contraseña**: Funcionalidad para que los usuarios cambien su contraseña
 ✅ **Generación dinámica de slots**: El backend crea automáticamente slots para cualquier fecha solicitada
 ✅ **UI mejorada**: Categorías colapsables, ordenación por nombre/fecha, badges organizados
+✅ **Cambio de rol seguro**: Si un admin cambia el rol de un usuario, sus sesiones previas quedan invalidadas automáticamente
 
 ## ⚠️ DESARROLLO LOCAL - NO CONFUNDIR CON PRODUCCIÓN
 
@@ -208,3 +209,52 @@ npm run web    # Web
 - Autenticación JWT en rutas protegidas
 - Validación de reglas de negocio en el backend
 - Verificación de propiedad de reservas antes de cancelar
+
+## Estabilidad de Sesión y Caché (9 Abril 2026)
+
+### API sin caché para reservas
+
+Para evitar calendarios/slots obsoletos tras dejar la app abierta, toda la API devuelve cabeceras anti-caché:
+
+- `Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private`
+- `Pragma: no-cache`
+- `Expires: 0`
+- `Surrogate-Control: no-store`
+
+Aplicado en:
+- `backend/server.js`
+- `api/index.php`
+- `api/.htaccess`
+
+### Sesión expirada: recuperación automática
+
+Cuando una petición autenticada devuelve `401`:
+- Se limpia sesión local automáticamente
+- Se fuerza retorno a login
+- Se muestra aviso de sesión expirada al usuario
+
+### Cambio de rol: invalidación inmediata de sesiones
+
+Cuando un administrador cambia el rol de un usuario (`admin`/`user`):
+- El backend incrementa `token_version`
+- Los JWT emitidos antes del cambio quedan inválidos
+- El usuario debe volver a iniciar sesión con su rol actualizado
+
+Implementación:
+- `backend/routes/admin.js`
+
+Implementación:
+- `frontend/services/api.js`
+- `frontend/App.js`
+
+### Reanudación tras pestaña en segundo plano
+
+- Revalidación de sesión al volver a foreground:
+    - Web: `visibilitychange`
+    - Móvil: `AppState` (`active`)
+- `Calendar` y `Mis Reservas` recargan al recuperar foco
+- Si falla la carga, se muestra botón **Reintentar**
+
+Pantallas reforzadas:
+- `frontend/screens/CalendarScreen.js`
+- `frontend/screens/MyBookingsScreen.js`

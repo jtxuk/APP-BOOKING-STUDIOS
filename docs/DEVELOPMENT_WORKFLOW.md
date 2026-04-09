@@ -117,7 +117,21 @@ npx expo export --platform web
 
 **Resultado**: Se genera carpeta `frontend/dist/` con el bundle compilado
 
-### 4. Desplegar a Producción
+### 4. Desplegar a Producción (recomendado: script atómico)
+
+```bash
+cd /home/millenia/www/app-reservas
+./frontend/deploy_web_atomic.sh
+```
+
+Este script:
+- Compila web (`expo export`)
+- Verifica que exista `AppEntry-*.js`
+- Despliega de forma atómica (`_expo`, `index.html`, `metadata.json`)
+- Valida que el hash de `index.html` coincida con el bundle real
+- Evita dejar la web en blanco si se corta el proceso
+
+### 5. Despliegue manual (solo si hace falta)
 
 ```bash
 # Eliminar bundle anterior
@@ -130,7 +144,7 @@ cp -r /home/millenia/www/app-reservas/frontend/dist/* /home/millenia/www/app-res
 ls -la /home/millenia/www/app-reservas/_expo/
 ```
 
-### 5. Verificar en producción
+### 6. Verificar en producción
 
 Abrir navegador: http://reservas.millenia.es
 
@@ -171,8 +185,7 @@ Cuando hagas cambios en **Backend**:
 
 Cuando hagas cambios en **Frontend**:
 - [ ] Editar código en `frontend/`
-- [ ] Compilar: `npx expo export --platform web`
-- [ ] Copiar `frontend/dist/*` a `_expo/`
+- [ ] Ejecutar: `./frontend/deploy_web_atomic.sh`
 - [ ] Refrescar navegador en `http://reservas.millenia.es`
 - [ ] Commit y push **solo frontend/** a GitHub (NO _expo/)
 
@@ -186,10 +199,15 @@ Cuando hagas cambios en **Frontend**:
 ## 🔍 Debugging
 
 **Si el frontend no muestra cambios**:
-1. ¿Compilaste?: `cd frontend && npx expo export --platform web`
-2. ¿Copiaste a _expo/?: `cp -r frontend/dist/* _expo/`
+1. ¿Ejecutaste deploy atómico?: `./frontend/deploy_web_atomic.sh`
+2. ¿Hash sincronizado?: comprobar `AppEntry-<hash>` en `index.html` y en `_expo/static/js/web/`
 3. ¿Refrescaste navegador?: Ctrl+F5 (hard refresh)
 4. ¿Hay errores en consola?: F12 → Console del navegador
+
+**Si VS Code se reinicia durante la compilación**:
+1. Vuelve a ejecutar `./frontend/deploy_web_atomic.sh`
+2. No hagas copias parciales manuales mientras el build está a medias
+3. Verifica el log: `tail -n 50 /home/millenia/www/app-reservas/frontend/deploy_web_atomic.log`
 
 **Si el backend no responde**:
 1. ¿Está corriendo?: `ps aux | grep node`
@@ -198,4 +216,4 @@ Cuando hagas cambios en **Frontend**:
 
 ---
 
-**Última actualización**: 4 Marzo 2026
+**Última actualización**: 9 Abril 2026

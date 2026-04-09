@@ -74,6 +74,41 @@
 
 ---
 
+## 🔄 Recuperación de Sesión Tras Inactividad (9 Abril 2026)
+
+```
+1. Usuario vuelve a la pestaña/app tras inactividad
+    │
+    ├─ Web: evento visibilitychange = visible
+    ├─ Móvil: AppState pasa a active
+    │
+    ├─ App revalida sesión con GET /api/users/profile
+    │
+    ├─ ¿Respuesta 401? ──NO──> Continúa flujo normal
+    │
+    └─ SÍ ──> Interceptor global:
+                  ├─ Limpia userToken y user en storage
+                  ├─ Actualiza estado global (userToken = null)
+                  ├─ Navega a Login automáticamente
+                  └─ Muestra aviso de sesión expirada
+```
+
+## 🧊 Política de Caché para API (9 Abril 2026)
+
+- Todas las respuestas de `/api` se sirven con directiva anti-caché.
+- Cabeceras aplicadas:
+   - `Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private`
+   - `Pragma: no-cache`
+   - `Expires: 0`
+   - `Surrogate-Control: no-store`
+- Implementado en:
+   - `backend/server.js`
+   - `api/index.php`
+   - `api/.htaccess`
+- Alcance limitado al proyecto `app-reservas`.
+
+---
+
 ## 📅 Flujo de Reserva
 
 ```

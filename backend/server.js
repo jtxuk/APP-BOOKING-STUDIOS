@@ -21,6 +21,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Disable caching for all API responses (booking data must always be fresh).
+app.use('/api', (req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store',
+    'Vary': 'Authorization, Cookie'
+  });
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/studios', studioRoutes);
