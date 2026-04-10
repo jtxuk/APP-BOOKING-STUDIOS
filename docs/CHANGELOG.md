@@ -3,6 +3,27 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 10 Abril 2026 (v1.0.8)]
+
+### 🐛 Corrección: slot cancelado vuelve a estar disponible
+
+- **Bug**: al cancelar una reserva, el slot quedaba bloqueado para todos los demás usuarios.
+- **Causa**: la tabla `bookings` tenía `UNIQUE(time_slot_id)` sin filtrar por estado, por lo que las filas canceladas impedían nuevas inserciones.
+- **Fix**:
+  - Eliminada la restricción global `UNIQUE(time_slot_id)`.
+  - Creado índice único parcial `bookings_active_time_slot_unique` activo solo para `status IN ('confirmed', 'blocked')`.
+  - Las reservas canceladas quedan en el historial del usuario pero no bloquean el slot.
+  - También corregido error de inicialización de BD por `CREATE OR REPLACE FUNCTION calcular_fin_acceso` — ahora hace `DROP FUNCTION IF EXISTS` previo.
+- Ficheros: `backend/config/database.js`, `backend/routes/bookings.js`
+
+### 🔄 Calendario se refresca automáticamente al volver de "Mis Reservas"
+
+- Al cancelar una reserva desde `MyBookingsScreen` y volver al calendario, los slots ahora se recargan automáticamente sin necesidad de salir al listado de estudios.
+- Implementado con `useFocusEffect` en `CalendarScreen`.
+- Fichero: `frontend/screens/CalendarScreen.js`
+
+---
+
 ## [Actualización 9 Abril 2026 (v1.0.7)]
 
 ### 🛡️ Política anti-caché para API de reservas

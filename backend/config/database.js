@@ -85,6 +85,11 @@ async function initializeDatabase() {
     `);
 
     // Crear o reemplazar función para calcular fin_acceso
+    // DROP primero para evitar error si el nombre de parámetros cambió en versión anterior
+    await pool.query(`
+      DROP FUNCTION IF EXISTS calcular_fin_acceso(character varying, timestamp without time zone)
+    `);
+
     await pool.query(`
       CREATE OR REPLACE FUNCTION calcular_fin_acceso(p_category VARCHAR, p_start_date TIMESTAMP)
       RETURNS DATE AS $$
@@ -210,6 +215,22 @@ async function initializeDatabase() {
         cancelled_at TIMESTAMP,
         UNIQUE(time_slot_id)
       )
+    `);
+
+    // Keep history rows (cancelled) while preventing double active bookings per slot.
+    await pool.query(`
+      ALTER TABLE bookings
+      DROP CONSTRAINT IF EXISTS bookings_time_slot_id_key
+    `);
+
+    await pool.query(`
+      DROP INDEX IF EXISTS bookings_time_slot_id_key
+    `);
+
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS bookings_active_time_slot_unique
+      ON bookings (time_slot_id)
+      WHERE status IN ('confirmed', 'blocked')
     `);
 
     console.log('Database tables initialized successfully');

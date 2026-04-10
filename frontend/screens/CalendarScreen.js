@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { studioAPI, bookingAPI, userAPI, adminAPI } from '../services/api';
 import * as SecureStore from 'expo-secure-store';
@@ -67,6 +68,13 @@ export default function CalendarScreen({ route }) {
     fetchHolidays();
     fetchTimeSlots(selectedDate);
   }, [selectedDate]);
+
+  // Refrescar slots al recuperar foco (p. ej. al volver desde MyBookingsScreen tras cancelar)
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchTimeSlots(selectedDate);
+    }, [selectedDate])
+  );
 
   const checkAdminStatus = async () => {
     try {

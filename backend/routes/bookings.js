@@ -182,8 +182,11 @@ router.post('/create', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating booking:', error);
     
-    // Detectar violación de UNIQUE constraint (código 23505 en PostgreSQL)
-    if (error.code === '23505' && error.constraint === 'bookings_time_slot_id_key') {
+    // Detectar colisión de slot activo (constraint antigua o índice parcial nuevo)
+    if (
+      error.code === '23505' &&
+      ['bookings_time_slot_id_key', 'bookings_active_time_slot_unique'].includes(error.constraint)
+    ) {
       return res.status(409).json({ error: 'Lo siento. ¡Justo ha sido reservado hace un segundo!' });
     }
     
@@ -246,10 +249,10 @@ router.delete('/:bookingId', verifyToken, async (req, res) => {
     const slotStart = new Date(`${booking.slot_date} ${booking.start_time}`);
     const minutesUntilStart = (slotStart - new Date()) / 60000;
 
-    // Check if cancellation deadline has passed (less than 6 horas until start)
-    if (minutesUntilStart < 360) {
+    // Check if cancellation deadline has passed (less than 3 horas until start)
+    if (minutesUntilStart < 180) {
       return res.status(400).json({ 
-        error: 'No se puede cancelar con menos de 6 horas antes del inicio de la reserva' 
+        error: 'No se puede cancelar con menos de 3 horas para el inicio' 
       });
     }
 
