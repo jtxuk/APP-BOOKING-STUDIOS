@@ -3,6 +3,22 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 16 Abril 2026 (v1.0.9)]
+
+### ⏱️ Corrección crítica en ventana de cancelación (3 horas)
+
+- **Bug**: en algunos casos, un alumno podía cancelar una reserva con menos de 180 minutos de antelación.
+- **Causa**: cálculo de minutos en JavaScript con parseo de fecha/hora que podía producir `Invalid Date` y dejar el control inefectivo.
+- **Fix**: cálculo de `minutes_until_start` movido a SQL en `DELETE /api/bookings/:bookingId`.
+- **Resultado**: la política de cancelación (mínimo 3 horas antes del inicio) se aplica de forma consistente.
+
+### 💬 Mensaje de motivo al bloquear cancelación
+
+- Cuando no se puede cancelar por faltar menos de 3 horas, ahora se muestra el motivo exacto al usuario en "Mis Reservas".
+- Unificada la alerta cross-platform (web/móvil) para evitar errores silenciosos en web.
+
+---
+
 ## [Actualización 10 Abril 2026 (v1.0.8)]
 
 ### 🐛 Corrección: slot cancelado vuelve a estar disponible

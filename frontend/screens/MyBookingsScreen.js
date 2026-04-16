@@ -19,6 +19,14 @@ export default function MyBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n\n${message}`);
+      return;
+    }
+    Alert.alert(title, message);
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       fetchBookings();
@@ -43,10 +51,11 @@ export default function MyBookingsScreen() {
     const doCancel = async () => {
       try {
         await bookingAPI.cancelBooking(bookingId);
-        Alert.alert('Éxito', 'Reserva cancelada correctamente');
-        fetchBookings();
+        showAlert('Éxito', 'Reserva cancelada correctamente');
+        await fetchBookings();
       } catch (error) {
-        Alert.alert('Error', 'No se pudo cancelar la reserva');
+        const message = error.response?.data?.error || 'No se puede cancelar la reserva faltando menos de tres horas';
+        showAlert('Error', message);
       }
     };
 

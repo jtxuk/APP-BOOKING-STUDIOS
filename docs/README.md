@@ -42,13 +42,14 @@ booking-app/
 ✅ **Máximo 2 reservas**: Los usuarios pueden reservar máximo 2 slots (solo cuentan las vigentes)
 ✅ **No consecutivos**: No se pueden reservar 2 slots seguidos en el mismo estudio
 ✅ **Sin solapamientos**: Nunca dos usuarios reservan el mismo slot
-✅ **Cancelación limitada**: Solo se puede cancelar hasta 15 minutos antes del inicio
+✅ **Cancelación limitada**: Solo se puede cancelar hasta 3 horas antes del inicio (180 minutos)
 ✅ **Sin reservas en pasado**: No se permiten reservas en fechas pasadas ni en slots de hoy cuyo inicio ya haya pasado
 ✅ **Reservas vigentes**: Solo aparecen en "Mis Reservas" las activas (presentes y futuras)
 ✅ **Histórico completo**: Sistema de histórico de reservas consultable por admins
 ✅ **Usuario por iniciales**: Los usuarios se muestran por sus iniciales (hasta 4 caracteres, formato libre)
 ✅ **Iniciales visibles**: Cada slot reservado muestra las iniciales del usuario en un badge compacto
 ✅ **Gestión de reservas**: Ver, crear y cancelar reservas
+✅ **Motivo de cancelación visible**: Si no se puede cancelar por tiempo, se muestra el motivo exacto al usuario
 ✅ **Sin registro frontend**: Solo se registran usuarios desde el backend
 ✅ **Sin pagos**: No hay procesamiento de pagos
 ✅ **Categorías de usuarios**: PME, EST-SUP, ING, PME+ING
@@ -183,7 +184,7 @@ npm run web    # Web
 - **No consecutivos**: Si reserva 2 slots, no pueden ser en horarios seguidos del mismo estudio
 - **Horarios**: 8:00-11:00, 11:00-14:00, 14:00-17:00, 17:00-20:00
 - **Identificación**: Los usuarios se muestran por sus iniciales (3 letras del nombre)
-- **Cancelación**: Los usuarios pueden cancelar sus propias reservas en cualquier momento
+- **Cancelación**: Los usuarios solo pueden cancelar sus propias reservas con al menos 3 horas de antelación
 
 ## Próximos Pasos
 

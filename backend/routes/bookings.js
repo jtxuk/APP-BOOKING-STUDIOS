@@ -77,7 +77,7 @@ router.post('/create', verifyToken, async (req, res) => {
     `;
     const pastCheckResult = await db.query(pastCheckQuery, [slotInfo.slot_date, slotInfo.start_time]);
     if (!pastCheckResult.rows[0].can_book) {
-      return res.status(400).json({ error: 'No se puede reservar este slot, ya han pasado más de 30 minutos desde su inicio' });
+      return res.status(400).json({ error: 'No se puede reservar un slot pasado' });
     }
 
     // Restringir fines de semana solo a usuarios no admin
@@ -227,7 +227,7 @@ router.get('/my-bookings', verifyToken, async (req, res) => {
   }
 });
 
-// Cancel a booking (only allowed 15+ minutes before start time)
+// Cancel a booking (only allowed 3+ hours before start time)
 router.delete('/:bookingId', verifyToken, async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -235,7 +235,9 @@ router.delete('/:bookingId', verifyToken, async (req, res) => {
 
     // Verify the booking belongs to the user and get slot info
     const bookingCheck = await db.query(`
-      SELECT b.id, ts.slot_date, ts.start_time
+      SELECT 
+        b.id,
+        ROUND(EXTRACT(EPOCH FROM (((ts.slot_date + ts.start_time::time)::timestamp) - CURRENT_TIMESTAMP)) / 60.0) AS minutes_until_start
       FROM bookings b
       JOIN time_slots ts ON b.time_slot_id = ts.id
       WHERE b.id = $1 AND b.user_id = $2 AND b.status = $3
@@ -246,8 +248,7 @@ router.delete('/:bookingId', verifyToken, async (req, res) => {
     }
 
     const booking = bookingCheck.rows[0];
-    const slotStart = new Date(`${booking.slot_date} ${booking.start_time}`);
-    const minutesUntilStart = (slotStart - new Date()) / 60000;
+    const minutesUntilStart = Number(booking.minutes_until_start);
 
     // Check if cancellation deadline has passed (less than 3 horas until start)
     if (minutesUntilStart < 180) {
