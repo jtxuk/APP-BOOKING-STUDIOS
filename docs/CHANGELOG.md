@@ -3,6 +3,41 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 21 Abril 2026 (v1.1.0)]
+
+### 🔐 Recuperación de contraseña por email
+
+- Nuevo endpoint `POST /api/auth/forgot-password`:
+  - Genera token de recuperación de un solo uso.
+  - Guarda expiración (30 minutos) en `password_reset_tokens`.
+  - Envía email por SMTP con botón de recuperación y código manual.
+- Nuevo endpoint `POST /api/auth/reset-password`:
+  - Valida token no usado y no expirado.
+  - Actualiza contraseña con bcrypt.
+  - Incrementa `token_version` para invalidar sesiones anteriores.
+- Seguridad:
+  - Mensaje genérico cuando el email no existe (evita enumeración de usuarios).
+  - Token marcado como usado tras reset exitoso.
+
+### 🔗 Flujo web de enlace de recuperación
+
+- Si la URL contiene `?reset-token=...`:
+  - La app limpia sesión local guardada.
+  - Fuerza pantalla de login.
+  - Abre automáticamente el modal "Recuperar Contraseña".
+  - Precarga el código de recuperación.
+
+### 📋 Mis Reservas: activas + historial
+
+- `GET /api/bookings/my-bookings` ahora devuelve:
+  - `active`: reservas confirmadas futuras (máximo 2, destacadas arriba).
+  - `history`: historial reciente (canceladas + completadas/pasadas).
+- UI de `MyBookingsScreen`:
+  - Sección superior "Reservas activas" con tarjetas destacadas.
+  - Sección "Historial reciente" con estado visual:
+    - Cancelada en rojo.
+    - Completada/resto en verde.
+
 ## [Actualización 16 Abril 2026 (v1.0.9)]
 
 ### ⏱️ Corrección crítica en ventana de cancelación (3 horas)

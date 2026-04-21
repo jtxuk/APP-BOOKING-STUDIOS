@@ -62,6 +62,8 @@ The server will start on `http://localhost:5000` (dev). In production it runs on
 
 ### Authentication
 - `POST /api/auth/login` - Login with email and password
+- `POST /api/auth/forgot-password` - Request password recovery email
+- `POST /api/auth/reset-password` - Reset password using token
 
 ### Studios
 - `GET /api/studios` - Get all studios
@@ -69,7 +71,7 @@ The server will start on `http://localhost:5000` (dev). In production it runs on
 
 ### Bookings
 - `POST /api/bookings/create` - Create a new booking
-- `GET /api/bookings/my-bookings` - Get user's bookings
+- `GET /api/bookings/my-bookings` - Get user's bookings split into `active` and `history`
 - `DELETE /api/bookings/:bookingId` - Cancel a booking
 
 ### Users
@@ -95,3 +97,4 @@ The server will start on `http://localhost:5000` (dev). In production it runs on
 - Maximum 2 bookings per user
 - Cannot book consecutive slots in the same studio
 - JWT tokens expire after 24 hours
+- Password recovery tokens are one-time use and expire after 30 minutes

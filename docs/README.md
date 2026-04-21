@@ -66,9 +66,11 @@ booking-app/
 ✅ **Estilos globales**: Sistema centralizado de colores y estilos (Colors.js, GlobalStyles.js)
 ✅ **Control de slots bloqueados**: Visualización de slots bloqueados por administradores
 ✅ **Cambio de contraseña**: Funcionalidad para que los usuarios cambien su contraseña
+✅ **Recuperación de contraseña por email**: Flujo de "Recuperar contraseña" con token de un solo uso y expiración de 30 minutos
 ✅ **Generación dinámica de slots**: El backend crea automáticamente slots para cualquier fecha solicitada
 ✅ **UI mejorada**: Categorías colapsables, ordenación por nombre/fecha, badges organizados
 ✅ **Cambio de rol seguro**: Si un admin cambia el rol de un usuario, sus sesiones previas quedan invalidadas automáticamente
+✅ **Mis Reservas con historial**: Sección de activas destacadas + historial reciente con estados (cancelada/completada)
 
 ## ⚠️ DESARROLLO LOCAL - NO CONFUNDIR CON PRODUCCIÓN
 
@@ -140,6 +142,8 @@ npm run web    # Web
 
 ### Autenticación
 - `POST /api/auth/login` - Login (email, password)
+- `POST /api/auth/forgot-password` - Solicitar recuperación por email
+- `POST /api/auth/reset-password` - Restablecer contraseña con token
 
 ### Estudios
 - `GET /api/studios` - Obtener todos los estudios
@@ -159,7 +163,7 @@ npm run web    # Web
 
 ### Reservas
 - `POST /api/bookings/create` - Crear una nueva reserva
-- `GET /api/bookings/my-bookings` - Obtener mis reservas
+- `GET /api/bookings/my-bookings` - Obtener mis reservas (`active` + `history`)
 - `DELETE /api/bookings/:bookingId` - Cancelar una reserva
 
 ### Perfil
@@ -174,7 +178,7 @@ npm run web    # Web
      - Al reservar un slot, se muestra un diálogo de confirmación con el formato:
          "<Nombre Estudio>\n<fecha larga>\n<horario>\n¿Confirmar?"
      - En móvil, el layout es compacto: calendario y los 4 slots caben en pantalla sin scroll.
-4. **Mis Reservas**: Visualización y cancelación de reservas
+4. **Mis Reservas**: Reservas activas destacadas, historial reciente y cancelación de reservas
 5. **Perfil**: Información del usuario, cambio de contraseña y cierre de sesión
 6. **Gestión de Alumnos** (admin): Panel completo de administración con categorías colapsables
 

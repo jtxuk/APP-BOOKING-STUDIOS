@@ -104,6 +104,7 @@ function AuthenticatedApp({ setUserToken }) {
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
+  const [initialResetToken, setInitialResetToken] = useState('');
   const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
@@ -112,6 +113,20 @@ export default function App() {
 
   const bootstrapAsync = async () => {
     try {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const resetTokenFromUrl = params.get('reset-token');
+
+        if (resetTokenFromUrl) {
+          await storage.removeItem('userToken');
+          await storage.removeItem('user');
+          setInitialResetToken(resetTokenFromUrl);
+          setUserToken(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const token = await storage.getItem('userToken');
       setUserToken(token);
     } catch (e) {
@@ -186,7 +201,13 @@ export default function App() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userToken == null ? (
           <Stack.Screen name="Login">
-            {(props) => <LoginScreen {...props} setUserToken={setUserToken} />}
+            {(props) => (
+              <LoginScreen
+                {...props}
+                setUserToken={setUserToken}
+                initialResetToken={initialResetToken}
+              />
+            )}
           </Stack.Screen>
         ) : (
           <Stack.Screen 

@@ -194,12 +194,12 @@ router.post('/create', verifyToken, async (req, res) => {
   }
 });
 
-// Get user's bookings (only current/future, not past)
+// Get user's bookings split into active and history
 router.get('/my-bookings', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const query = `
+    const activeQuery = `
       SELECT 
         b.id,
         b.user_id,
@@ -210,17 +210,51 @@ router.get('/my-bookings', verifyToken, async (req, res) => {
         ts.end_time,
         ts.slot_date,
         b.status,
-        b.created_at
+        b.created_at,
+        b.cancelled_at
       FROM bookings b
       JOIN studios s ON b.studio_id = s.id
       JOIN time_slots ts ON b.time_slot_id = ts.id
       WHERE b.user_id = $1 AND b.status = 'confirmed'
       AND (ts.slot_date || ' ' || ts.end_time)::timestamp > CURRENT_TIMESTAMP
-      ORDER BY ts.slot_date DESC, ts.slot_number
+      ORDER BY ts.slot_date ASC, ts.slot_number ASC
     `;
 
-    const result = await db.query(query, [userId]);
-    res.json(result.rows);
+    const historyQuery = `
+      SELECT 
+        b.id,
+        b.user_id,
+        b.studio_id,
+        s.name as studio_name,
+        ts.slot_number,
+        ts.start_time,
+        ts.end_time,
+        ts.slot_date,
+        b.status,
+        b.created_at,
+        b.cancelled_at
+      FROM bookings b
+      JOIN studios s ON b.studio_id = s.id
+      JOIN time_slots ts ON b.time_slot_id = ts.id
+      WHERE b.user_id = $1
+      AND (
+        b.status = 'cancelled'
+        OR (b.status = 'confirmed' AND (ts.slot_date || ' ' || ts.end_time)::timestamp <= CURRENT_TIMESTAMP)
+        OR b.status = 'blocked'
+      )
+      ORDER BY ts.slot_date DESC, ts.slot_number DESC
+      LIMIT 20
+    `;
+
+    const [activeResult, historyResult] = await Promise.all([
+      db.query(activeQuery, [userId]),
+      db.query(historyQuery, [userId]),
+    ]);
+
+    res.json({
+      active: activeResult.rows,
+      history: historyResult.rows,
+    });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ error: 'Error al cargar las reservas' });

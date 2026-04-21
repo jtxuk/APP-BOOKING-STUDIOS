@@ -69,10 +69,11 @@ frontend/
 ## Features
 
 - **Login**: Restricted access with JWT authentication
+- **Password Recovery**: Recovery by email with one-time token
 - **Studios**: Browse 8 available recording studios
 - **Booking**: Select dates and time slots (4 slots of 3 hours each)
 - **Calendar**: Interactive calendar for date selection
-- **My Bookings**: View and cancel reservations
+- **My Bookings**: View active bookings first, plus recent history with status
 - **Profile**: View user info and logout
 
 ## Constraints

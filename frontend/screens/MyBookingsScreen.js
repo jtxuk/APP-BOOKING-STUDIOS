@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,7 +15,8 @@ import Colors from '../constants/Colors';
 import { GlobalStyles } from '../constants/GlobalStyles';
 
 export default function MyBookingsScreen() {
-  const [bookings, setBookings] = useState([]);
+  const [activeBookings, setActiveBookings] = useState([]);
+  const [bookingHistory, setBookingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -38,9 +39,13 @@ export default function MyBookingsScreen() {
       setLoading(true);
       setErrorMessage('');
       const response = await bookingAPI.getMyBookings();
-      setBookings(response.data);
+      const active = response.data?.active || [];
+      const history = response.data?.history || [];
+      setActiveBookings(active);
+      setBookingHistory(history);
     } catch (error) {
-      setBookings([]);
+      setActiveBookings([]);
+      setBookingHistory([]);
       setErrorMessage('No se pudieron cargar las reservas. Pulsa Reintentar.');
     } finally {
       setLoading(false);
@@ -80,8 +85,15 @@ export default function MyBookingsScreen() {
     );
   };
 
-  const renderBooking = ({ item }) => (
-    <View style={styles.bookingCard}>
+  const getHistoryStatusLabel = (item) => {
+    if (item.status === 'cancelled') {
+      return 'Cancelada';
+    }
+    return 'Completada';
+  };
+
+  const renderActiveBooking = ({ item }) => (
+    <View style={[styles.bookingCard, styles.activeBookingCard]}>
       <View style={styles.bookingInfo}>
         <Text style={styles.studioName}>{item.studio_name}</Text>
         <Text style={styles.slotTime}>
@@ -100,6 +112,27 @@ export default function MyBookingsScreen() {
     </View>
   );
 
+  const renderHistoryBooking = ({ item }) => {
+    const isCancelled = item.status === 'cancelled';
+
+    return (
+      <View style={styles.bookingCard}>
+        <View style={styles.bookingInfo}>
+          <Text style={styles.studioName}>{item.studio_name}</Text>
+          <Text style={styles.slotTime}>
+            {item.start_time} - {item.end_time}
+          </Text>
+          <Text style={styles.date}>
+            {new Date(item.slot_date).toLocaleDateString('es-ES')}
+          </Text>
+        </View>
+        <View style={[styles.statusBadge, isCancelled ? styles.statusCancelled : styles.statusOther]}>
+          <Text style={styles.statusBadgeText}>{getHistoryStatusLabel(item)}</Text>
+        </View>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -117,16 +150,37 @@ export default function MyBookingsScreen() {
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
         </View>
-      ) : bookings.length === 0 ? (
+      ) : activeBookings.length === 0 && bookingHistory.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text style={styles.emptyText}>No tienes reservas</Text>
         </View>
       ) : (
         <FlatList
-          data={bookings}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderBooking}
+          data={bookingHistory}
+          keyExtractor={(item) => `history-${item.id}`}
+          renderItem={renderHistoryBooking}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Reservas activas ({activeBookings.length}/2)</Text>
+              </View>
+              {activeBookings.length === 0 ? (
+                <Text style={styles.emptySectionText}>No tienes reservas activas</Text>
+              ) : (
+                activeBookings.map((booking) => (
+                  <View key={`active-${booking.id}`}>{renderActiveBooking({ item: booking })}</View>
+                ))
+              )}
+
+              <View style={[styles.sectionHeader, styles.historyHeader]}>
+                <Text style={styles.sectionTitle}>Historial reciente</Text>
+              </View>
+              {bookingHistory.length === 0 ? (
+                <Text style={styles.emptySectionText}>Sin historial todavía</Text>
+              ) : null}
+            </View>
+          }
         />
       )}
     </View>
@@ -142,11 +196,32 @@ const styles = StyleSheet.create({
   },
   centerContainer: GlobalStyles.centerContainer,
   listContent: GlobalStyles.listContent,
+  sectionHeader: {
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  historyHeader: {
+    marginTop: 18,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  emptySectionText: {
+    fontSize: 14,
+    color: Colors.textTertiary,
+    marginBottom: 8,
+  },
   bookingCard: {
     ...GlobalStyles.card,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  activeBookingCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
   },
   bookingInfo: {
     flex: 1,
@@ -176,6 +251,24 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     fontSize: 12,
     fontWeight: '600',
+  },
+  statusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minWidth: 92,
+    alignItems: 'center',
+  },
+  statusCancelled: {
+    backgroundColor: '#d32f2f',
+  },
+  statusOther: {
+    backgroundColor: '#2e7d32',
+  },
+  statusBadgeText: {
+    color: Colors.textWhite,
+    fontSize: 12,
+    fontWeight: '700',
   },
   emptyText: {
     fontSize: 16,
