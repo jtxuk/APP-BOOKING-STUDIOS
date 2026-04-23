@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_ROOT="/home/millenia/www/app-reservas"
+if [[ -d "/home/reservasmillenia/www" ]]; then
+  APP_ROOT="/home/reservasmillenia/www"
+elif [[ -d "/home/millenia/www/app-reservas" ]]; then
+  APP_ROOT="/home/millenia/www/app-reservas"
+else
+  echo "ERROR: no se encontro APP_ROOT valido" >&2
+  exit 1
+fi
 FRONTEND_DIR="$APP_ROOT/frontend"
 DIST_DIR="$FRONTEND_DIR/dist"
 LOCK_FILE="$APP_ROOT/.deploy_frontend.lock"

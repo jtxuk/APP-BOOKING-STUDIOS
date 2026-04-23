@@ -29,10 +29,10 @@ const notifySessionExpired = async (error) => {
   }
 };
 
-// En producción usa /api (ruta local a través de Apache)
-// En desarrollo usa localhost:5000
+// En producción usa ruta relativa para evitar mixed-content en HTTPS.
+// En desarrollo usa localhost:5000.
 const API_URL = typeof window !== 'undefined' && window.location.hostname === 'reservas.millenia.es'
-  ? 'http://reservas.millenia.es/api'
+  ? '/api'
   : 'http://localhost:5000/api';
 
 console.log('📡 API URL configurada:', API_URL);

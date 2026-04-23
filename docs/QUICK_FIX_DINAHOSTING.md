@@ -1,12 +1,15 @@
 # 🔧 SOLUCIONES RÁPIDAS - DINAHOSTING
 
-## Situación Actual
+## Situación Actual — 2026-04-22 ✅ RESUELTO
 
-- ✅ Hosting: Dinahosting (compartido)
-- ❌ Problema 1: Servidor se cae tras reinicio (PM2 no arranca automáticamente)
-- ❌ Problema 2: No es HTTPS (solo HTTP)
+- ✅ Hosting: Dinahosting — nuevo hosting para reservas.millenia.es
+- ✅ HTTPS: activo con Let's Encrypt. HTTP redirige 301 a HTTPS.
+- ✅ Autoarranque: PM2 local (sin -g) + cron `@reboot pm2 resurrect`.
+- ✅ API proxy: Apache → PHP bridge (`/api/index.php`) → Node en `127.0.0.1:15025`.
+- ✅ Frontend: URL de API cambiada a `/api` (relativa) para evitar mixed-content.
+- ✅ WordPress millenia.es: no tocado, sigue en hosting anterior.
 
-Ambos se solucionan **SIN cambiar de proveedor**.
+> Para restaurar desde cero ver sección **Restauración rápida** al final del documento.
 
 ---
 
@@ -32,8 +35,11 @@ crontab -e
 
 **Paso 3**: Agregar esta línea al final del archivo (preserva las líneas existentes)
 ```bash
-@reboot sleep 10 && cd /home/millenia/www/app-reservas/backend && $(which node) $(which pm2) start server.js --name app-reservas
+@reboot sleep 15 && PATH=/usr/local/bin:/usr/bin:/bin && /home/reservasmillenia/www/backend/node_modules/.bin/pm2 resurrect
 ```
+
+> ⚠️ Ruta correcta para el servidor actual: `/home/reservasmillenia/www/backend`.
+> PM2 se instala **local** (`npm install pm2` dentro de backend), no global.
 
 **Paso 4**: Guardar y cerrar (en nano: `Ctrl+O`, `Enter`, `Ctrl+X`)
 
@@ -173,4 +179,20 @@ Si tienen dudas con Dinahosting:
 
 ---
 
-**Última actualización**: 2 Abril 2026
+---
+
+## Restauración rápida (si el proceso Node muere)
+
+```bash
+cd /home/reservasmillenia/www/backend
+npx pm2 start server.js --name reservas-app
+npx pm2 save
+```
+
+Verificar:
+```bash
+curl https://reservas.millenia.es/api/health
+# → {"status":"Backend is running"}
+```
+
+**Última actualización**: 22 Abril 2026

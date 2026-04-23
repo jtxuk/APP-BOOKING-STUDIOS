@@ -83,19 +83,26 @@ git push origin main
 
 ## Deploy del Backend
 
-### Opción 0: VPS Dinahosting (Apache + PHP proxy)
+### Opción 0: Dinahosting — reservas.millenia.es (estado actual 2026-04-22)
+
+**Arquitectura activa**:
+- Apache sirve el frontend estático (`index.html`, `_expo/`).
+- `/api/*` → proxy PHP (`api/index.php`) → Node en `127.0.0.1:15025`.
+- Node gestionado por PM2 local + cron `@reboot`.
+- HTTPS activo. HTTP redirige 301 a HTTPS.
+- Proxy Nginx del panel: **desactivado** (no necesario con esta arquitectura).
 
 ```bash
 # Subir backend
-rsync -qr --delete backend/ millenia@82.98.145.67:/home/millenia/www/app-reservas/backend/
+rsync -qr --delete backend/ reservasmillenia@reservas.millenia.es:/home/reservasmillenia/www/backend/
 
 # Instalar dependencias y reiniciar
-ssh millenia@82.98.145.67 "cd /home/millenia/www/app-reservas/backend && npm install --production && pm2 restart app-reservas"
+ssh reservasmillenia@reservas.millenia.es "cd /home/reservasmillenia/www/backend && npm install --production && npx pm2 restart reservas-app"
 ```
 
-**Nota**: El API público se expone vía `/api` usando el proxy PHP en `/home/millenia/www/app-reservas/api`.
+**Nota**: El API público se expone vía `/api` usando el proxy PHP en `/home/reservasmillenia/www/api/index.php`. El puerto interno es 15025 (definido en `backend/.env`).
 
-**Importante**: si haces `rsync --delete` del frontend a `/home/millenia/www/app-reservas/`, vuelve a subir también `/backend` y `/api`.
+**Importante**: si haces `rsync --delete` del frontend a `/home/reservasmillenia/www/`, vuelve a subir también `/backend` y `/api`.
 
 ### Opción 1: Heroku (Gratis/Pagado)
 

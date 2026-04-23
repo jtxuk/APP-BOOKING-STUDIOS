@@ -39,9 +39,11 @@ npm install --production
 ```
 
 ### 1.5 Crea el archivo .env en el servidor
+
+> Ruta actual en producción: `/home/reservasmillenia/www/backend/.env`
+
 ```bash
-cat > /home/millenia/www/app-reservas/backend/.env << EOF
-PORT=5000
+PORT=15025
 DB_HOST=pgsql03.dinaserver.com
 DB_PORT=5432
 DB_NAME=booking_app
@@ -49,35 +51,31 @@ DB_USER=TU_USUARIO_DB
 DB_PASSWORD=TU_PASSWORD_DB
 JWT_SECRET=tu_clave_secreta_muy_segura
 NODE_ENV=production
-EOF
+BACKEND_URL=https://reservas.millenia.es
 ```
 
-### 1.6 Instala PM2 para mantener el servidor corriendo
+> `PORT=15025` es el puerto interno que usa el proxy PHP para reenviar `/api` a Node.
+
+### 1.6 Instala PM2 local para mantener el servidor corriendo
+
 ```bash
-npm install -g pm2
-pm2 start server.js --name app-reservas
-pm2 startup
-pm2 save
+# Instalar PM2 local (sin -g, no requiere permisos root)
+npm install pm2
+
+# Arrancar la app
+npx pm2 start server.js --name reservas-app
+npx pm2 save
 ```
 
-> ⚠️ **Autoarranque tras reinicio del servidor**
->
-> En hosting compartido (sin root/systemd), `pm2 startup` falla con `Init system not found`.
-> Opciones disponibles:
->
-> **Opción 1 — `pm2 startup` (solo si hay acceso root/systemd)**
-> ```bash
-> pm2 startup   # genera e instala servicio systemd → falla en hosting compartido
-> pm2 save      # guarda lista de procesos → funciona siempre
-> ```
->
-> **Opción 2 — Cron `@reboot` (sin root, recomendada para hosting compartido)**
-> ```bash
-> crontab -e
-> # Añadir esta línea:
-> @reboot sleep 10 && cd /home/millenia/www/app-reservas/backend && $(which node) $(which pm2) start server.js --name app-reservas
-> ```
-> - Seguro: corre bajo el usuario `millenia`, sin privilegios elevados
+**Autoarranque tras reinicio — Cron `@reboot` (sin root)**
+
+```bash
+crontab -e
+# Añadir esta línea:
+@reboot sleep 15 && PATH=/usr/local/bin:/usr/bin:/bin && /home/reservasmillenia/www/backend/node_modules/.bin/pm2 resurrect
+```
+
+> `pm2 resurrect` relanza la lista guardada con `pm2 save`. No arranca duplicados si el proceso ya corre.
 > - No afecta a otras webs ni al servidor
 > - Limitación: solo arranca en reboot; si el proceso muere en mitad del día, PM2 lo relanza solo
 >

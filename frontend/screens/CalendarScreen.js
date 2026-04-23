@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -32,7 +33,9 @@ LocaleConfig.defaultLocale = 'es';
 
 export default function CalendarScreen({ route }) {
   const { studio } = route.params;
+  const { height: windowHeight } = useWindowDimensions();
   const isCompactLayout = Platform.OS !== 'web';
+  const isSmallMobile = isCompactLayout && windowHeight < 760;
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -249,15 +252,19 @@ export default function CalendarScreen({ route }) {
       style={[
         styles.slotCard,
         isCompactLayout && styles.slotCardCompact,
+        isSmallMobile && styles.slotCardCompactSmall,
         item.status === 'booked' && styles.slotBooked,
         item.status === 'blocked' && styles.slotBlocked,
       ]}
       onPress={() => handleBookSlot(item)}
       disabled={(!isAdmin && (item.status === 'booked' || item.status === 'blocked')) || booking}
     >
-      <Text style={styles.slotTime}>{item.start_time} - {item.end_time}</Text>
+      <Text style={[styles.slotTime, isSmallMobile && styles.slotTimeCompactSmall]}>
+        {item.start_time} - {item.end_time}
+      </Text>
       <Text style={[
         styles.slotStatus,
+        isSmallMobile && styles.slotStatusCompactSmall,
         item.status === 'booked' && styles.statusBooked,
         item.status === 'blocked' && styles.statusBlocked,
       ]}>
@@ -272,7 +279,13 @@ export default function CalendarScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.calendarContainer, isCompactLayout && styles.calendarContainerCompact]}>
+      <View
+        style={[
+          styles.calendarContainer,
+          isCompactLayout && styles.calendarContainerCompact,
+          isSmallMobile && styles.calendarContainerCompactSmall,
+        ]}
+      >
         <Calendar
           current={selectedDate}
           onDayPress={(day) => {
@@ -294,20 +307,20 @@ export default function CalendarScreen({ route }) {
             todayTextColor: '#0E6BA8',
             arrowColor: '#0E6BA8',
             textDisabledColor: '#ff0000',
-            textDayFontSize: isCompactLayout ? 12 : 13,
-            textMonthFontSize: isCompactLayout ? 14 : 15,
+            textDayFontSize: isSmallMobile ? 11 : isCompactLayout ? 12 : 13,
+            textMonthFontSize: isSmallMobile ? 13 : isCompactLayout ? 14 : 15,
             'stylesheet.calendar.header': {
               header: {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                paddingLeft: isCompactLayout ? 8 : 10,
-                paddingRight: isCompactLayout ? 8 : 10,
-                marginTop: isCompactLayout ? 2 : 6,
+                paddingLeft: isSmallMobile ? 6 : isCompactLayout ? 8 : 10,
+                paddingRight: isSmallMobile ? 6 : isCompactLayout ? 8 : 10,
+                marginTop: isSmallMobile ? 0 : isCompactLayout ? 2 : 6,
                 alignItems: 'center',
-                paddingBottom: isCompactLayout ? 2 : 5,
+                paddingBottom: isSmallMobile ? 1 : isCompactLayout ? 2 : 5,
               },
               monthText: {
-                fontSize: isCompactLayout ? 14 : 15,
+                fontSize: isSmallMobile ? 13 : isCompactLayout ? 14 : 15,
                 fontWeight: 'bold',
                 paddingTop: 0,
                 paddingBottom: 0,
@@ -317,14 +330,14 @@ export default function CalendarScreen({ route }) {
             },
             'stylesheet.day.basic': {
               base: {
-                width: isCompactLayout ? 28 : 32,
-                height: isCompactLayout ? 28 : 32,
+                width: isSmallMobile ? 24 : isCompactLayout ? 28 : 32,
+                height: isSmallMobile ? 24 : isCompactLayout ? 28 : 32,
                 alignItems: 'center',
                 justifyContent: 'center',
               },
               text: {
                 marginTop: 0,
-                fontSize: isCompactLayout ? 12 : 13,
+                fontSize: isSmallMobile ? 11 : isCompactLayout ? 12 : 13,
                 fontWeight: '300',
                 color: '#2d4150',
               },
@@ -333,19 +346,36 @@ export default function CalendarScreen({ route }) {
           style={[
             styles.calendar,
             isCompactLayout && styles.calendarCompact,
+            isSmallMobile && styles.calendarCompactSmall,
           ]}
         />
       </View>
 
       <View style={[styles.slotsContainer, isCompactLayout && styles.slotsContainerCompact]}>
-        <Text style={[styles.studioTitle, isCompactLayout && styles.studioTitleCompact]}>{studio.name}</Text>
-        <Text style={[styles.dateText, isCompactLayout && styles.dateTextCompact]}>
-          {new Date(selectedDate).toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
+        <Text
+          style={[
+            styles.studioTitle,
+            isCompactLayout && styles.studioTitleCompact,
+            isSmallMobile && styles.studioTitleCompactSmall,
+          ]}
+          numberOfLines={1}
+        >
+          {studio.name}
+        </Text>
+        <Text
+          style={[
+            styles.dateText,
+            isCompactLayout && styles.dateTextCompact,
+            isSmallMobile && styles.dateTextCompactSmall,
+          ]}
+          numberOfLines={1}
+        >
+          {new Date(selectedDate).toLocaleDateString(
+            'es-ES',
+            isSmallMobile
+              ? { year: 'numeric', month: 'short', day: 'numeric' }
+              : { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+          )}
         </Text>
 
         {loading ? (
@@ -383,12 +413,20 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 6,
   },
+  calendarContainerCompactSmall: {
+    paddingTop: 2,
+    paddingBottom: 2,
+    paddingHorizontal: 4,
+  },
   calendar: {
     paddingTop: 0,
     paddingBottom: 5,
   },
   calendarCompact: {
     paddingBottom: 2,
+  },
+  calendarCompactSmall: {
+    paddingBottom: 0,
   },
   slotsContainer: {
     flex: 1,
@@ -409,6 +447,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 1,
   },
+  studioTitleCompactSmall: {
+    fontSize: 15,
+    marginBottom: 0,
+  },
   dateText: {
     fontSize: 13,
     color: '#666',
@@ -418,6 +460,10 @@ const styles = StyleSheet.create({
   dateTextCompact: {
     fontSize: 12,
     marginBottom: 6,
+  },
+  dateTextCompactSmall: {
+    fontSize: 11,
+    marginBottom: 4,
   },
   centerContainer: {
     flex: 1,
@@ -437,6 +483,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     marginBottom: 4,
   },
+  slotCardCompactSmall: {
+    paddingVertical: 4,
+    paddingHorizontal: 7,
+    marginBottom: 3,
+  },
   slotBooked: {
     borderLeftColor: '#f44336',
     opacity: 0.6,
@@ -447,9 +498,16 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 2,
   },
+  slotTimeCompactSmall: {
+    fontSize: 13,
+    marginBottom: 1,
+  },
   slotStatus: {
     fontSize: 12,
     color: '#4CAF50',
+  },
+  slotStatusCompactSmall: {
+    fontSize: 11,
   },
   statusBooked: {
     color: '#f44336',

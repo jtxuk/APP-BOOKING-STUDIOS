@@ -11,6 +11,7 @@ const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
+const webRoot = path.resolve(__dirname, '..');
 
 // Middleware
 app.use(cors({
@@ -40,6 +41,12 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Serve built frontend assets when the domain is fully proxied to Node.
+app.use('/_expo', express.static(path.join(webRoot, '_expo')));
+app.use('/static', express.static(path.join(webRoot, 'static')));
+app.use('/assets', express.static(path.join(webRoot, 'assets')));
+app.use(express.static(webRoot, { index: false }));
+
 // Servir panel de administración
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
@@ -48,6 +55,14 @@ app.get('/admin', (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running' });
+});
+
+// SPA fallback for non-API routes.
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(webRoot, 'index.html'));
 });
 
 // Error handling middleware

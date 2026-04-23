@@ -1,6 +1,25 @@
 <?php
 // Proxy API to backend Node.js server
-$target = "http://127.0.0.1:5000" . $_SERVER["REQUEST_URI"];
+$backendPort = "5000";
+$envPath = dirname(__DIR__) . "/backend/.env";
+if (is_readable($envPath)) {
+    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($envLines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || substr($trimmed, 0, 1) === '#') {
+            continue;
+        }
+        if (substr($trimmed, 0, 5) === 'PORT=') {
+            $value = trim(substr($trimmed, 5));
+            if (ctype_digit($value)) {
+                $backendPort = $value;
+            }
+            break;
+        }
+    }
+}
+
+$target = "http://127.0.0.1:" . $backendPort . $_SERVER["REQUEST_URI"];
 $method = $_SERVER["REQUEST_METHOD"];
 
 // CORS preflight handling
