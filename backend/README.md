@@ -96,5 +96,6 @@ The server will start on `http://localhost:5000` (dev). In production it runs on
 - Users must be created directly in the database (no frontend registration)
 - Maximum 2 bookings per user
 - Cannot book consecutive slots in the same studio
+- `fin_acceso` is auto-calculated for non-admin users as the first Monday of June in the end year of their category duration (PME/EST-SUP: 2, ING: 1, PME+ING: 3)
 - JWT tokens expire after 24 hours
 - Password recovery tokens are one-time use and expire after 30 minutes

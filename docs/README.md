@@ -60,6 +60,7 @@ booking-app/
 ✅ **Gestión de reservas admin**: Los administradores pueden eliminar reservas desde el calendario
 ✅ **Admins sin restricciones**: Los administradores pueden reservar cualquier día (fines de semana, festivos) sin límite de slots
 ✅ **Lógica PME+ING por curso**: Acceso a PME los 2 primeros cursos, ING a partir del 3º (corte 20 septiembre)
+✅ **Fin de acceso por curso**: Para usuarios no-admin, el acceso termina el primer lunes de junio del año de finalización según categoría
 ✅ **Cambio de categoría rastreado**: `category_start_date` registra cuándo cambió la categoría; `fin_acceso` se recalcula automáticamente
 ✅ **Estudio C exclusivo PME**: Solo alumnos PME tienen acceso al Estudio C
 ✅ **Error claro por iniciales duplicadas**: El admin ve mensaje específico en modal si las iniciales ya están en uso

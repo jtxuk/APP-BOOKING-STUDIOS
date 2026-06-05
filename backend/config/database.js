@@ -97,6 +97,8 @@ async function initializeDatabase() {
         anio_inicio_academico INTEGER;
         duracion INTEGER;
         fecha_corte DATE;
+        fecha_base_junio DATE;
+        dia_semana INTEGER;
       BEGIN
         -- Año académico con corte en 20 de septiembre
         fecha_corte := MAKE_DATE(EXTRACT(YEAR FROM p_start_date)::INTEGER, 9, 20);
@@ -113,8 +115,16 @@ async function initializeDatabase() {
           WHEN 'PME+ING' THEN duracion := 3;
           ELSE duracion := 1;
         END CASE;
-        
-        RETURN MAKE_DATE(anio_inicio_academico + duracion, 9, 20);
+
+        -- Primer lunes de junio del año de finalización del curso
+        fecha_base_junio := MAKE_DATE(anio_inicio_academico + duracion, 6, 1);
+        dia_semana := EXTRACT(ISODOW FROM fecha_base_junio);
+
+        IF dia_semana = 1 THEN
+          RETURN fecha_base_junio;
+        END IF;
+
+        RETURN (fecha_base_junio + (8 - dia_semana) * INTERVAL '1 day')::DATE;
       END;
       $$ LANGUAGE plpgsql;
     `);

@@ -3,6 +3,20 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 5 Junio 2026 (v1.1.1)]
+
+### 📅 Nueva regla de fin de acceso por curso
+
+- `fin_acceso` pasa a calcularse como **primer lunes de junio** del año de finalización.
+- Se mantienen las duraciones por categoría:
+  - `PME`: 2 años
+  - `EST-SUP`: 2 años
+  - `ING`: 1 año
+  - `PME+ING`: 3 años
+- `admin` sigue sin fecha de fin de acceso (`fin_acceso = NULL`).
+- Aplicado en la función SQL `calcular_fin_acceso` en `backend/config/database.js`.
+- Tras reinicio del backend, el backfill actual recalcula `fin_acceso` para usuarios existentes no-admin.
+
 ## [Actualización 21 Abril 2026 (v1.1.0)]
 
 ### 🔐 Recuperación de contraseña por email

@@ -36,6 +36,7 @@ export default function AdminScreen() {
     password: '',
     category: 'PME',
     initials: '',
+    fin_acceso: '',
     role: 'alum',
     activo: true,
   });
@@ -44,6 +45,15 @@ export default function AdminScreen() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
   const [formError, setFormError] = useState('');
+
+  const isValidIsoDate = (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -124,6 +134,7 @@ export default function AdminScreen() {
       password: '',
       category: 'PME',
       initials: '',
+      fin_acceso: '',
       role: 'alum',
       activo: true,
     });
@@ -140,6 +151,7 @@ export default function AdminScreen() {
       password: '', // No prellenar contraseña
       category: user.category,
       initials: user.initials,
+      fin_acceso: user.fin_acceso ? String(user.fin_acceso).split('T')[0] : '',
       role: user.role,
       activo: user.activo,
     });
@@ -164,12 +176,22 @@ export default function AdminScreen() {
         return;
       }
 
+      const normalizedFinAcceso = (formData.fin_acceso || '').trim();
+      if (formData.role !== 'admin' && normalizedFinAcceso && !isValidIsoDate(normalizedFinAcceso)) {
+        setFormError('Fin de acceso debe tener formato válido YYYY-MM-DD');
+        return;
+      }
+
       if (!editingUser && !formData.password) {
         setFormError('La contraseña es obligatoria para nuevos usuarios');
         return;
       }
 
-      const dataToSend = { ...formData, initials: normalizedInitials };
+      const dataToSend = {
+        ...formData,
+        initials: normalizedInitials,
+        fin_acceso: formData.role === 'admin' ? null : (normalizedFinAcceso || null),
+      };
       
       // Si es edición y no hay contraseña, no la enviamos
       if (editingUser && !formData.password) {
@@ -453,6 +475,20 @@ export default function AdminScreen() {
                 maxLength={4}
                 autoCapitalize="characters"
               />
+
+              {formData.role !== 'admin' ? (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Fin de acceso (YYYY-MM-DD)"
+                  value={formData.fin_acceso}
+                  onChangeText={(text) => setFormData({ ...formData, fin_acceso: text })}
+                  autoCapitalize="none"
+                />
+              ) : (
+                <View style={styles.adminDateInfoBox}>
+                  <Text style={styles.adminDateInfoText}>Fin de acceso no aplica para administradores.</Text>
+                </View>
+              )}
 
               <Text style={styles.label}>Categoría:</Text>
               <View style={styles.categoryButtons}>
@@ -896,6 +932,19 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+  },
+  adminDateInfoBox: {
+    backgroundColor: '#f9f9f9',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 15,
+  },
+  adminDateInfoText: {
+    color: '#666',
+    fontSize: 14,
   },
   errorBox: {
     backgroundColor: '#FFEBEE',
