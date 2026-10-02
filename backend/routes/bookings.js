@@ -3,17 +3,20 @@ const router = express.Router();
 const db = require('../config/database');
 const { verifyToken } = require('../middleware/auth');
 
-// Helper function to check if user has consecutive bookings in same studio
-async function hasConsecutiveSlotsInStudio(userId, studioId) {
+// Helper function to check if the user already has a confirmed booking in a slot
+// consecutivo (adyacente) al que intenta reservar, en el mismo estudio y el mismo día.
+async function hasConsecutiveSlotConflict(userId, studioId, slotDate, slotNumber) {
   const query = `
     SELECT COUNT(*) as count
     FROM bookings b
     JOIN time_slots ts ON b.time_slot_id = ts.id
-    WHERE b.user_id = $1 
-    AND ts.studio_id = $2 
-    AND b.status = 'confirmed'
+    WHERE b.user_id = $1
+      AND ts.studio_id = $2
+      AND b.status = 'confirmed'
+      AND ts.slot_date = $3::date
+      AND ABS(ts.slot_number - $4) = 1
   `;
-  const result = await db.query(query, [userId, studioId]);
+  const result = await db.query(query, [userId, studioId, slotDate, slotNumber]);
   return parseInt(result.rows[0].count) > 0;
 }
 
@@ -54,6 +57,7 @@ router.post('/create', verifyToken, async (req, res) => {
     const slotInfoQuery = `
       SELECT 
         id,
+        slot_number,
         to_char(slot_date, 'YYYY-MM-DD') as slot_date,
         start_time,
         end_time
@@ -163,9 +167,15 @@ router.post('/create', verifyToken, async (req, res) => {
     }
 
     // Restricción de slots consecutivos solo para usuarios no admin
+    // (solo aplica al mismo estudio y al mismo día; bloquea turnos adyacentes)
     if (!isAdmin) {
-      const hasConsecutive = await hasConsecutiveSlotsInStudio(userId, studioId);
-      if (hasConsecutive && bookingCount === 1) {
+      const hasConsecutive = await hasConsecutiveSlotConflict(
+        userId,
+        studioId,
+        slotInfo.slot_date,
+        slotInfo.slot_number
+      );
+      if (hasConsecutive) {
         return res.status(400).json({ error: 'No se pueden reservar slots consecutivos en el mismo estudio' });
       }
     }

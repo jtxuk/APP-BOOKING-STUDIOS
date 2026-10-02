@@ -3,6 +3,42 @@
 > ⚠️ **NOTA DE PRODUCCIÓN**: Este sistema está desplegado en `reservas.millenia.es` con usuarios reales.  
 > Referencias a `localhost` o usuarios `@example.com` son históricas. Ver `PRODUCTION_README.md`.
 
+## [Actualización 2 Octubre 2026 (v1.1.3)]
+
+### 🔁 Corrección de la regla "no consecutivos" en reservas
+- `backend/routes/bookings.js`: la comprobación anterior bloqueaba **cualquier** segunda reserva en el mismo estudio.
+- Ahora solo se bloquea un turno **consecutivo (adyacente)** al que se intenta reservar, en el **mismo estudio y el mismo día**.
+- Se permite reservar en el mismo estudio en días distintos, y en el mismo día con turnos no consecutivos (respetando el resto de reglas: máx. 2 activas, sin mismo horario en otro estudio, etc.).
+
+### 📧 Email de recuperación con branding Millenia
+- `backend/routes/auth.js`: el remitente ahora se muestra como **"MILLENIA"**.
+- Añadido logo de Millenia sobre fondo negro en la cabecera del email (PNG), sin bordes redondeados.
+
+## [Actualización 30 Septiembre 2026 (v1.1.2)]
+### 🗑️ Borrado de usuarios en dos fases
+- `DELETE /api/admin/users/:id` (`backend/routes/admin.js`):
+- Usuario **activo** → se **desactiva** (`activo=false`).
+- Usuario **inactivo** → se **elimina definitivamente** de la BD (cascade borra `bookings` y `password_reset_tokens`).
+- El admin no puede desactivarse/eliminarse a sí mismo (400).
+### 📞 Eliminado el campo Teléfono (Alcance B)
+- `frontend/screens/AdminScreen.js`: quitado el input de teléfono del formulario.
+- `backend/routes/admin.js`: `phone` fuera de `SELECT`/`INSERT`/`UPDATE`.
+- `backend/routes/auth.js`: el login ahora es **solo por email** (eliminada la rama por teléfono).
+- La columna `phone` **se mantiene** en la BD (con su constraint UNIQUE) por compatibilidad.
+### 📅 `fin_acceso` manual en edición
+- Trigger `trigger_calcular_fin_acceso` (`backend/config/database.js`): ahora se ejecuta **solo `BEFORE INSERT`** (antes `INSERT OR UPDATE OF category, role, category_start_date`).
+- En **edición** se respeta la fecha enviada por el admin (vacío = `null`). Ya no se recalcula ni se sobrescribe.
+- En **creación** se sigue calculando automáticamente (primer lunes de junio según categoría).
+- Cambiar **rol** ya no altera la fecha de fin de acceso.
+- Eliminado el backfill que recalculaba `fin_acceso` de todos los usuarios al arrancar el backend.
+### 👥 Alta masiva de usuarios PME
+- Añadidos usuarios de curso **PME** (rol `user`, contraseña inicial `123456` con `must_change_password=true`).
+- `fin_acceso` calculado automáticamente por trigger en la creación.
+- Iniciales duplicadas → sufijo numérico automático (`ALR` → `ALR1`, `ALR2`…).
+### 📦 Despliegue
+- Backend: `npx pm2 restart reservas-app`.
+- Frontend: `cd frontend && bash deploy_web_atomic.sh` (nuevo bundle `AppEntry-105a14598a4862b950080b01d273a5e0.js`).
+
 ## [Actualización 5 Junio 2026 (v1.1.1)]
 
 ### 📅 Nueva regla de fin de acceso por curso

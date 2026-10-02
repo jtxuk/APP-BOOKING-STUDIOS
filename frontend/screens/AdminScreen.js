@@ -32,7 +32,6 @@ export default function AdminScreen() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
     category: 'PME',
     initials: '',
@@ -130,7 +129,6 @@ export default function AdminScreen() {
     setFormData({
       name: '',
       email: '',
-      phone: '',
       password: '',
       category: 'PME',
       initials: '',
@@ -147,7 +145,6 @@ export default function AdminScreen() {
     setFormData({
       name: user.name,
       email: user.email,
-      phone: user.phone || '',
       password: '', // No prellenar contraseña
       category: user.category,
       initials: user.initials,
@@ -451,13 +448,6 @@ export default function AdminScreen() {
                 autoCapitalize="none"
               />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Teléfono"
-                value={formData.phone}
-                onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                keyboardType="phone-pad"
-              />
 
               <TextInput
                 style={styles.input}

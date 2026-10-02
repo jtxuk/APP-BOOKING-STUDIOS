@@ -1,0 +1,15 @@
+<IfModule mod_headers.c>
+  # Global no-cache policy: always fetch fresh content.
+  Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, private"
+  Header always set Pragma "no-cache"
+  Header always set Expires "0"
+  Header always set Surrogate-Control "no-store"
+  Header always unset ETag
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 0 seconds"
+</IfModule>
+
+FileETag None

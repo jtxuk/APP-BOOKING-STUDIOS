@@ -129,21 +129,19 @@ async function initializeDatabase() {
       $$ LANGUAGE plpgsql;
     `);
 
-    // Trigger: administra category_start_date y recalcula fin_acceso
+    // Trigger: administra category_start_date; fin_acceso se calcula SOLO en INSERT (en UPDATE se respeta)
     await pool.query(`
       CREATE OR REPLACE FUNCTION trigger_calcular_fin_acceso()
       RETURNS TRIGGER AS $$
       BEGIN
+        -- Admin siempre sin fecha
         IF NEW.role = 'admin' THEN
           NEW.category_start_date := NULL;
           NEW.fin_acceso := NULL;
           RETURN NEW;
         END IF;
 
-        IF TG_OP = 'UPDATE' AND NEW.category IS DISTINCT FROM OLD.category THEN
-          NEW.category_start_date := CURRENT_DATE;
-        END IF;
-
+        -- category_start_date: solo si viene vacío (en UPDATE se preserva el existente)
         IF NEW.category_start_date IS NULL THEN
           IF TG_OP = 'INSERT' THEN
             NEW.category_start_date := COALESCE(NEW.created_at::DATE, CURRENT_DATE);
@@ -152,7 +150,11 @@ async function initializeDatabase() {
           END IF;
         END IF;
 
-        NEW.fin_acceso := calcular_fin_acceso(NEW.category, NEW.category_start_date::timestamp);
+        -- fin_acceso SOLO se calcula al CREAR el usuario. En UPDATE se respeta lo recibido.
+        IF TG_OP = 'INSERT' THEN
+          NEW.fin_acceso := calcular_fin_acceso(NEW.category, NEW.category_start_date::timestamp);
+        END IF;
+
         RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;
@@ -162,7 +164,7 @@ async function initializeDatabase() {
       DROP TRIGGER IF EXISTS before_insert_user_fin_acceso ON users;
       DROP TRIGGER IF EXISTS before_upsert_user_fin_acceso ON users;
       CREATE TRIGGER before_upsert_user_fin_acceso
-      BEFORE INSERT OR UPDATE OF category, role, category_start_date ON users
+      BEFORE INSERT ON users
       FOR EACH ROW
       EXECUTE FUNCTION trigger_calcular_fin_acceso();
     `);
@@ -179,12 +181,6 @@ async function initializeDatabase() {
       SET category_start_date = NULL,
           fin_acceso = NULL
       WHERE role = 'admin';
-    `);
-
-    await pool.query(`
-      UPDATE users
-      SET fin_acceso = calcular_fin_acceso(category, category_start_date::timestamp)
-      WHERE role <> 'admin';
     `);
 
     // Create studios table

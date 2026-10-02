@@ -21,14 +21,21 @@ const transporter = nodemailer.createTransport({
 async function sendResetEmail(email, resetToken, userName) {
   const resetUrl = `${process.env.BACKEND_URL}?reset-token=${resetToken}`;
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: `MILLENIA <${process.env.SMTP_FROM}>`,
     to: email,
     subject: 'Recuperación de contraseña - Reservas Millenia',
     html: `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#000000;">
+        <tr>
+          <td align="center" style="padding:24px;">
+            <img src="https://millenia.es/wp-content/uploads/2025/02/logo-millenia-v2.png" alt="MILLENIA" style="max-width:220px; height:auto; display:block; border:0;" />
+          </td>
+        </tr>
+      </table>
       <h2>Hola ${userName},</h2>
       <p>Hemos recibido una solicitud para recuperar tu contraseña.</p>
       <p>Este enlace es válido durante 30 minutos:</p>
-      <p><a href="${resetUrl}" style="padding: 10px 20px; background-color: #0E6BA8; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Recuperar Contraseña</a></p>
+      <p><a href="${resetUrl}" style="padding: 10px 20px; background-color: #0E6BA8; color: white; text-decoration: none; display: inline-block;">Recuperar Contraseña</a></p>
       <p>O copia este código: <strong>${resetToken}</strong></p>
       <p>Si no solicitaste este cambio, ignora este email.</p>
       <p>Saludos,<br/>Millenia</p>
@@ -39,25 +46,19 @@ async function sendResetEmail(email, resetToken, userName) {
 }
 
 
-// Login endpoint - email OR phone
+// Login endpoint - email
 router.post('/login', async (req, res) => {
   try {
-    const { email, phone, password } = req.body;
+    const { email, password } = req.body;
 
-    // Validar que se proporcione email o teléfono
-    if ((!email && !phone) || !password) {
-      return res.status(400).json({ error: 'Email/teléfono y contraseña requeridos' });
+    // Validar que se proporcione email
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña requeridos' });
     }
 
-    // Buscar usuario por email o teléfono
-    let query, params;
-    if (email) {
-      query = 'SELECT id, name, email, phone, password_hash, category, initials, role, must_change_password, token_version, activo FROM users WHERE email = $1';
-      params = [email];
-    } else {
-      query = 'SELECT id, name, email, phone, password_hash, category, initials, role, must_change_password, token_version, activo FROM users WHERE phone = $1';
-      params = [phone];
-    }
+    // Buscar usuario por email
+    const query = 'SELECT id, name, email, password_hash, category, initials, role, must_change_password, token_version, activo FROM users WHERE email = $1';
+    const params = [email];
 
     const result = await db.query(query, params);
 
@@ -82,7 +83,6 @@ router.post('/login', async (req, res) => {
       { 
         id: user.id, 
         email: user.email, 
-        phone: user.phone,
         name: user.name, 
         initials: user.initials,
         category: user.category,
@@ -100,7 +100,6 @@ router.post('/login', async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
         initials: user.initials,
         category: user.category,
         role: user.role

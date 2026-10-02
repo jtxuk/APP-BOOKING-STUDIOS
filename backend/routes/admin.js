@@ -12,7 +12,7 @@ router.use(verifyAdmin);
 router.get('/users', async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users ORDER BY id'
+      'SELECT id, name, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users ORDER BY id'
     );
     res.json(result.rows);
   } catch (error) {
@@ -26,7 +26,7 @@ router.get('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(
-      'SELECT id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, category, initials, role, category_start_date, fin_acceso, activo, created_at FROM users WHERE id = $1',
       [id]
     );
     
@@ -44,7 +44,7 @@ router.get('/users/:id', async (req, res) => {
 // POST /api/admin/users - Crear nuevo usuario
 router.post('/users', async (req, res) => {
   try {
-    const { name, phone, email, password, category, initials, role = 'user' } = req.body;
+    const { name, email, password, category, initials, role = 'user' } = req.body;
     
     // Validar campos requeridos
     if (!name || !email || !password || !category || !initials) {
@@ -75,8 +75,8 @@ router.post('/users', async (req, res) => {
     
     // Insertar usuario (fin_acceso se calcula automáticamente por trigger)
     const result = await db.query(
-      'INSERT INTO users (name, phone, email, password_hash, category, initials, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at',
-      [name, phone, email, password_hash, category, normalizedInitials, role]
+      'INSERT INTO users (name, email, password_hash, category, initials, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, category, initials, role, category_start_date, fin_acceso, activo, created_at',
+      [name, email, password_hash, category, normalizedInitials, role]
     );
     
     res.status(201).json(result.rows[0]);
@@ -104,7 +104,7 @@ router.post('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone, email, category, initials, role, fin_acceso, activo } = req.body;
+    const { name, email, category, initials, role, fin_acceso, activo } = req.body;
     const shouldNullAccessDate = role === 'admin';
 
     const existingUserResult = await db.query(
@@ -128,11 +128,7 @@ router.put('/users/:id', async (req, res) => {
       updates.push(`name = $${paramCount++}`);
       values.push(name);
     }
-    if (phone !== undefined) {
-      updates.push(`phone = $${paramCount++}`);
-      values.push(phone);
-    }
-    if (email !== undefined) {
+if (email !== undefined) {
       updates.push(`email = $${paramCount++}`);
       values.push(email);
     }
@@ -182,7 +178,7 @@ router.put('/users/:id', async (req, res) => {
     }
     
     values.push(id);
-    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, phone, email, category, initials, role, category_start_date, fin_acceso, activo, created_at`;
+    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, email, category, initials, role, category_start_date, fin_acceso, activo, created_at`;
     
     const result = await db.query(query, values);
     
@@ -207,29 +203,39 @@ router.put('/users/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/admin/users/:id - Desactivar usuario (soft delete)
+// DELETE /api/admin/users/:id - Desactivar si esta activo; eliminar definitivamente si ya estaba inactivo
 router.delete('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // No permitir que el admin se desactive a sí mismo
+
+    // No permitir que el admin se desactive/elimine a si mismo
     if (parseInt(id) === req.user.id) {
       return res.status(400).json({ error: 'No puedes desactivar tu propia cuenta' });
     }
     
+    const current = await db.query('SELECT id, name, email, activo FROM users WHERE id = $1', [id]);
+    if (current.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Si ya estaba inactivo -> borrado DEFINITIVO (cascade borra bookings y tokens)
+    if (current.rows[0].activo === false) {
+      const deleted = await db.query(
+        'DELETE FROM users WHERE id = $1 RETURNING id, name, email',
+        [id]
+      );
+      return res.json({ message: 'Usuario eliminado definitivamente', deleted: true, user: deleted.rows[0] });
+    }
+
+    // Si estaba activo -> soft delete (desactivar)
     const result = await db.query(
       'UPDATE users SET activo = false WHERE id = $1 RETURNING id, name, email, activo',
       [id]
     );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    
-    res.json({ message: 'Usuario desactivado', user: result.rows[0] });
+    res.json({ message: 'Usuario desactivado', deleted: false, user: result.rows[0] });
   } catch (error) {
-    console.error('Error al desactivar usuario:', error);
-    res.status(500).json({ error: 'Error al desactivar usuario' });
+    console.error('Error al gestionar usuario:', error);
+    res.status(500).json({ error: 'Error al gestionar usuario' });
   }
 });
 
