@@ -33,9 +33,10 @@ LocaleConfig.defaultLocale = 'es';
 
 export default function CalendarScreen({ route }) {
   const { studio } = route.params;
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const isCompactLayout = Platform.OS !== 'web';
   const isSmallMobile = isCompactLayout && windowHeight < 760;
+  const isWebMobile = Platform.OS === 'web' && windowWidth < 768;
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -284,6 +285,7 @@ export default function CalendarScreen({ route }) {
           styles.calendarContainer,
           isCompactLayout && styles.calendarContainerCompact,
           isSmallMobile && styles.calendarContainerCompactSmall,
+          isWebMobile && styles.calendarContainerWebMobile,
         ]}
       >
         <Calendar
@@ -313,8 +315,8 @@ export default function CalendarScreen({ route }) {
               header: {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                paddingLeft: isSmallMobile ? 6 : isCompactLayout ? 8 : 10,
-                paddingRight: isSmallMobile ? 6 : isCompactLayout ? 8 : 10,
+                paddingLeft: isSmallMobile ? 6 : isWebMobile ? 3 : isCompactLayout ? 8 : 10,
+                paddingRight: isSmallMobile ? 6 : isWebMobile ? 3 : isCompactLayout ? 8 : 10,
                 marginTop: isSmallMobile ? 0 : isCompactLayout ? 2 : 6,
                 alignItems: 'center',
                 paddingBottom: isSmallMobile ? 1 : isCompactLayout ? 2 : 5,
@@ -326,6 +328,12 @@ export default function CalendarScreen({ route }) {
                 paddingBottom: 0,
                 color: '#0E6BA8',
                 margin: 0,
+              },
+            },
+            'stylesheet.calendar.main': {
+              container: {
+                paddingLeft: isWebMobile ? 0 : 5,
+                paddingRight: isWebMobile ? 0 : 5,
               },
             },
             'stylesheet.day.basic': {
@@ -352,32 +360,6 @@ export default function CalendarScreen({ route }) {
       </View>
 
       <View style={[styles.slotsContainer, isCompactLayout && styles.slotsContainerCompact]}>
-        <Text
-          style={[
-            styles.studioTitle,
-            isCompactLayout && styles.studioTitleCompact,
-            isSmallMobile && styles.studioTitleCompactSmall,
-          ]}
-          numberOfLines={1}
-        >
-          {studio.name}
-        </Text>
-        <Text
-          style={[
-            styles.dateText,
-            isCompactLayout && styles.dateTextCompact,
-            isSmallMobile && styles.dateTextCompactSmall,
-          ]}
-          numberOfLines={1}
-        >
-          {new Date(selectedDate).toLocaleDateString(
-            'es-ES',
-            isSmallMobile
-              ? { year: 'numeric', month: 'short', day: 'numeric' }
-              : { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-          )}
-        </Text>
-
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color="#0E6BA8" />
@@ -418,6 +400,11 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
     paddingHorizontal: 4,
   },
+  calendarContainerWebMobile: {
+    paddingTop: 2,
+    paddingBottom: 4,
+    paddingHorizontal: 2,
+  },
   calendar: {
     paddingTop: 0,
     paddingBottom: 5,
@@ -436,34 +423,6 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingHorizontal: 6,
     paddingBottom: 6,
-  },
-  studioTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 3,
-  },
-  studioTitleCompact: {
-    fontSize: 16,
-    marginBottom: 1,
-  },
-  studioTitleCompactSmall: {
-    fontSize: 15,
-    marginBottom: 0,
-  },
-  dateText: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 10,
-    textTransform: 'capitalize',
-  },
-  dateTextCompact: {
-    fontSize: 12,
-    marginBottom: 6,
-  },
-  dateTextCompactSmall: {
-    fontSize: 11,
-    marginBottom: 4,
   },
   centerContainer: {
     flex: 1,

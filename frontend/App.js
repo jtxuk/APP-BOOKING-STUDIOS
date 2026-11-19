@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Alert, AppState, Platform } from 'react-native';
+import { View, StyleSheet, Alert, AppState, Platform, useWindowDimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -28,7 +28,10 @@ function StudioStackNavigator() {
       <Stack.Screen 
         name="Calendar" 
         component={CalendarScreen}
-        options={{ title: 'Calendario' }}
+        options={({ route }) => ({
+          title: route.params?.studio?.name || 'Calendario',
+          headerTitleAlign: 'center',
+        })}
       />
     </Stack.Navigator>
   );
@@ -65,10 +68,22 @@ function MyBookingsStackNavigator() {
 }
 
 function AuthenticatedApp({ setUserToken }) {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarStyle: { backgroundColor: '#f5f5f5' },
+        tabBarStyle: {
+          backgroundColor: '#f5f5f5',
+          height: isMobile ? 64 : 56,
+          paddingTop: isMobile ? 6 : 4,
+          paddingBottom: isMobile ? 8 : 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: isMobile ? 15 : 13,
+          fontWeight: '600',
+        },
         headerShown: false,
       }}
     >
@@ -85,7 +100,7 @@ function AuthenticatedApp({ setUserToken }) {
         component={MyBookingsStackNavigator}
         options={{
           title: 'Mis Reservas',
-          tabBarLabel: 'Mis Reservas',
+          tabBarLabel: 'Reservas',
         }}
       />
       <Tab.Screen 
